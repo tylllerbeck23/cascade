@@ -248,6 +248,12 @@ ul.b li{margin:4px 0}
 .confirm .box{background:var(--bg2);border:1px solid var(--hair2);border-radius:16px;padding:16px;width:100%;max-width:360px}
 .confirm p{font-size:15px;margin-bottom:14px}
 .confirm .acts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pill.behind{background:rgba(236,131,90,.16);color:var(--serious)}
+.pill.ahead{background:var(--money-soft);color:var(--money)}
+.track{position:relative;height:12px;border-radius:999px;background:var(--panel3);margin:10px 0 8px;overflow:visible}
+.track>i{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:var(--money)}
+.track>b{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:1px;background:var(--ink2)}
+.track-legend{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
 .empty{padding:22px 10px;text-align:center;color:var(--ink3);font-size:13.5px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (min-width:600px){.hero .value{font-size:54px}}
@@ -1599,7 +1605,7 @@ const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = se
 /* ---------------- state ---------------- */
 const KEY = 'cascade.state.v1';
 const firstOfMonth = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-01`; };
-const DEFAULT = () => ({ v:1, createdAt: todayISO(), settings:{ hoursPerWeek:12, scenario:1, horizon:12, startDate:firstOfMonth(), tipDismissed:false }, stages:{}, ledger:[] });
+const DEFAULT = () => ({ v:1, createdAt: todayISO(), settings:{ hoursPerWeek:12, scenario:1, horizon:12, startDate:firstOfMonth(), tipDismissed:false, goal:1000 }, stages:{}, ledger:[], weekly:{ key:'', done:{} }, sprints:{} });
 let S;
 function normalize(){
   const d = DEFAULT(); const st0 = (S.settings && typeof S.settings === 'object') ? S.settings : {}; S.settings = Object.assign({}, d.settings, st0);
@@ -1610,6 +1616,11 @@ function normalize(){
   if (typeof S.settings.startDate !== 'string' || !/^\d{4}-\d{2}(-\d{2})?$/.test(S.settings.startDate)) S.settings.startDate = d.settings.startDate;
   if (S.settings.startDate.length === 7) S.settings.startDate += '-01';
   S.settings.tipDismissed = !!S.settings.tipDismissed;
+  S.settings.goal = clamp(Math.round(num(S.settings.goal, 1000)), 50, 1000000);
+  S.weekly = (S.weekly && typeof S.weekly === 'object') ? S.weekly : { key:'', done:{} };
+  S.weekly.key = typeof S.weekly.key === 'string' ? S.weekly.key : ''; S.weekly.done = (S.weekly.done && typeof S.weekly.done === 'object') ? S.weekly.done : {};
+  S.sprints = (S.sprints && typeof S.sprints === 'object') ? S.sprints : {};
+  Object.keys(S.sprints).forEach(k => { if (!S.sprints[k] || typeof S.sprints[k] !== 'object') delete S.sprints[k]; });
   S.stages = (S.stages && typeof S.stages === 'object') ? S.stages : {};
   Object.keys(S.stages).forEach(k => { const r = S.stages[k]; if (!BY_ID[k] || !r || typeof r !== 'object') { delete S.stages[k]; return; }
     if (!Object.prototype.hasOwnProperty.call(STATUS, r.status)) r.status = 'idle';
@@ -1644,6 +1655,35 @@ function actualsByMonth(){
 function stageEarning(id){ // income in the last 45 days
   const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 45);
   return S.ledger.some(e => e.stage === id && income(e) && parseISO(e.date) >= cutoff);
+}
+/* Monday of the current week, used to reset the weekly checklist */
+const weekKey = () => { const d = new Date(); const back = (d.getDay() + 6) % 7; const m = new Date(d.getFullYear(), d.getMonth(), d.getDate() - back); return `${m.getFullYear()}-${pad(m.getMonth()+1)}-${pad(m.getDate())}`; };
+function weekly(){ if (S.weekly.key !== weekKey()) { S.weekly = { key: weekKey(), done: {} }; save(); } return S.weekly; }
+/* The 90-day sprint whose "Months a-b" range contains this month */
+function currentSprint(){
+  const sps = (DATA.research.playbook && DATA.research.playbook.sprints) || []; if (!sps.length) return null;
+  const m = nowMonth(); let found = null;
+  sps.forEach((sp, i) => { const mm = /Months?\s+(\d+)\s*[-–]\s*(\d+)/i.exec(sp.name); if (!found && mm && m >= +mm[1] && m <= +mm[2]) found = { sp, i }; });
+  return found || { sp: sps[m < 0 ? 0 : sps.length - 1], i: m < 0 ? 0 : sps.length - 1 };
+}
+/* Actual income so far versus what each scenario planned by today */
+function tracking(){
+  const nm = nowMonth(); if (nm < 0) return null;
+  const a = actualsByMonth(); let act = 0; for (let m = 0; m <= nm; m++) act += a[m] ? a[m].inc : 0;
+  const d = new Date(); const frac = d.getDate() / new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  const plan = [0, 1, 2].map(sc => { const f = forecast(sc, nm + 1); let sum = 0; for (let m = 0; m <= nm; m++) sum += f.months[m].total * (m === nm ? frac : 1); return sum; });
+  if (act <= 0 && plan[1] < 1) return null;
+  const label = act >= plan[2] ? 'Above the high case' : act >= plan[1] ? 'Between base and high' : act >= plan[0] ? 'Between low and base' : 'Below the low case';
+  return { act, plan, label };
+}
+/* A live stage earning well under its own low-case curve */
+function stageHealth(s){
+  const r = st(s.id); if (r.status !== 'live' && r.status !== 'building') return null;
+  const t = nowMonth() - schedule(s).start; if (t < 2) return null;
+  const low = rawRev(s, t, 0), base = rawRev(s, t, 1); if (low <= 0) return null;
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+  const last30 = S.ledger.filter(e => e.stage === s.id && income(e) && parseISO(e.date) >= cutoff).reduce((x, e) => x + (+e.amount || 0), 0);
+  return { last30, low, base, state: last30 < low * 0.5 ? 'behind' : last30 >= base ? 'ahead' : 'ontrack' };
 }
 
 /* ---------------- forecast engine ---------------- */
@@ -1791,7 +1831,7 @@ function chartCard(mount, {title, sub, render, table}){
 }
 
 /* ---------------- shared partials ---------------- */
-const statusPill = (id) => { const r = st(id); const earning = stageEarning(id); return `<span class="pill ${r.status}"><i class="d"></i>${STATUS[r.status]}</span>${earning ? '<span class="pill earning">$ earning</span>' : ''}`; };
+const statusPill = (id) => { const r = st(id); const earning = stageEarning(id); const h = BY_ID[id] ? stageHealth(BY_ID[id]) : null; return `<span class="pill ${r.status}"><i class="d"></i>${STATUS[r.status]}</span>${earning ? '<span class="pill earning">$ earning</span>' : ''}${h && h.state === 'behind' ? '<span class="pill behind">Behind plan</span>' : ''}${h && h.state === 'ahead' ? '<span class="pill ahead">Ahead of plan</span>' : ''}`; };
 const catTag = (c) => `<span class="tag"><i class="sw" style="background:${catColor(c)}"></i>${esc(CATS[c] ? CATS[c].label : c)}</span>`;
 const stageChip = (id) => { const s = BY_ID[id]; if (!s) return ''; return `<button type="button" class="tag link" data-open-stage="${s.id}"><i class="sw" style="background:${catColor(s.cat)}"></i>${s.n} · ${esc(s.short)}</button>`; };
 const fedBy = (id) => STAGES.filter(f => (f.feeds || []).some(e => e.to === id));
@@ -1803,6 +1843,41 @@ function nextActions(limit=3){
 }
 
 /* ---------------- views ---------------- */
+function trackCard(){
+  const t = tracking(); if (!t) return '';
+  const max = Math.max(t.plan[2], t.act, 1) * 1.08; const pct = v => clamp(v / max * 100, 0, 100).toFixed(1);
+  const behind = STAGES.filter(s => { const h = stageHealth(s); return h && h.state === 'behind'; });
+  return `<div class="card"><h2>On track? <span class="sub">since ${esc(monLY(0))}</span></h2>
+    <div class="between"><b style="font-size:17px">${esc(t.label)}</b><span class="small muted">${fmtMoney(t.act)} earned</span></div>
+    <div class="track" role="img" aria-label="Earned ${fmtMoney(t.act)} against plan: low ${fmtMoney(t.plan[0])}, base ${fmtMoney(t.plan[1])}, high ${fmtMoney(t.plan[2])}"><i style="width:${pct(t.act)}%"></i><b style="left:${pct(t.plan[0])}%"></b><b style="left:${pct(t.plan[1])}%"></b><b style="left:${pct(t.plan[2])}%"></b></div>
+    <div class="track-legend"><span>Low ${fmtMoney(t.plan[0])}</span><span>Base ${fmtMoney(t.plan[1])}</span><span>High ${fmtMoney(t.plan[2])}</span></div>
+    <div class="xs muted" style="margin-top:6px">What each plan expected by today, counting only the stages and start dates you have set. Log every payment in the Ledger to keep this honest.</div>
+    ${behind.length ? `<div class="notice warn small" style="margin-top:10px"><b>Behind plan:</b> ${behind.map(s => `<button type="button" class="tag link" data-open-stage="${s.id}" style="margin:2px 2px 0 0">${s.n} · ${esc(s.short)}</button>`).join('')}<div style="margin-top:4px">Each earned under half its low-case plan in the last 30 days. Check its kill rule.</div></div>` : ''}
+  </div>`;
+}
+function weekCard(){
+  const pb = DATA.research.playbook || {}; const wk = weekly(); const sp = currentSprint();
+  if (!(pb.weekly && pb.weekly.length) && !sp) return '';
+  const mon = parseISO(wk.key).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  const spDone = sp ? sp.sp.goals.filter((x, gi) => (S.sprints[sp.i] || {})[gi]).length : 0;
+  return `<div class="card"><h2>This week <span class="sub">week of ${esc(mon)}</span></h2>
+    ${pb.weekly && pb.weekly.length ? `<div>${pb.weekly.map((w, i) => `<label class="check"><input type="checkbox" data-wk="${i}" ${wk.done[i] ? 'checked' : ''}><span>${esc(w)}</span></label>`).join('')}</div>` : ''}
+    ${sp ? `<div class="hr"></div><div class="between" style="margin-bottom:4px"><h3 style="margin:0">${esc(sp.sp.name)}</h3><span class="xs muted" id="sp-count">${spDone} of ${sp.sp.goals.length} done</span></div>
+      <div>${sp.sp.goals.map((g, gi) => `<label class="check"><input type="checkbox" data-sp="${sp.i}:${gi}" ${(S.sprints[sp.i] || {})[gi] ? 'checked' : ''}><span>${esc(g)}</span></label>`).join('')}</div>` : ''}
+    <div class="xs muted" style="margin-top:6px">The weekly list clears every Monday. Sprint goals stay checked.</div>
+  </div>`;
+}
+function renderGoal(cm){
+  const mount = $('#goal-card'); if (!mount) return;
+  const goal = S.settings.goal; const fs = [0, 1, 2].map(i => forecast(i, cm + 24));
+  const rows = fs.map((f, i) => { let hit = null; for (let m = cm; m < cm + 24; m++) { if (f.months[m].total >= goal) { hit = m; break; } } const peak = Math.max(...f.months.slice(cm, cm + 24).map(x => x.total)); return { i, hit, peak }; });
+  mount.innerHTML = `<div class="card"><h2>Goal planner <span class="sub">when the cascade hits your number</span></h2>
+    <div class="field" style="margin-bottom:6px"><label for="goal-in">Monthly income goal ($)</label><input id="goal-in" type="number" inputmode="numeric" min="50" step="50" value="${goal}"></div>
+    <div class="list" id="goal-rows">${rows.map(r => `<div class="item" style="min-height:44px;padding:9px 0"><div class="body"><div class="title">${esc(SCEN[r.i].long)}</div><div class="sub">${r.hit == null ? `Peaks at ${fmtMoney(r.peak)}/mo within 24 months` : (r.hit === cm ? 'Already there this month' : r.hit - cm === 1 ? 'Next month' : `${r.hit - cm} months from now`)}</div></div><div class="amt">${r.hit == null ? 'Not yet' : esc(monLY(r.hit))}</div></div>`).join('')}</div>
+    <div class="xs muted" style="margin-top:6px">Uses your ${S.settings.hoursPerWeek} h/week budget and the stage dates you have set. The default plan never needs more than 12 h/week, so extra hours only help if you add stages; fewer hours push every date later.</div>
+  </div>`;
+  const inp = $('#goal-in'); inp.addEventListener('change', () => { const v = Math.round(+inp.value); if (!(v >= 50)) { inp.value = S.settings.goal; return; } S.settings.goal = clamp(v, 50, 1000000); save(); renderGoal(cm); const again = $('#goal-in'); if (again) again.focus(); });
+}
 function renderHome(){
   const v = $('#view-home'); const sc = scenario(); const cm = curMonth(); const f = forecast(sc, cm + 24); const nm = nowMonth();
   const proj12 = sumRange(f.months, cm, cm + 12); const tot = ledgerTotals(); const thisMonth = ledgerTotals(e => monthIdx(e.date, S.settings.startDate) === nm);
@@ -1824,6 +1899,8 @@ function renderHome(){
       <div class="tile"><div class="label">Stages</div><div class="value">${live} live</div><div class="delta">${building} building · ${STAGES.length - live - building} waiting</div></div>
       <div class="tile"><div class="label">Hours this month</div><div class="value">${demand}<span class="muted" style="font-size:14px;font-weight:600"> / ${budget} wk</span></div><div class="meter${demand > budget ? ' over' : ''}"><i style="width:${clamp(demand / budget * 100, 2, 100)}%"></i></div></div>
     </div>
+    ${trackCard()}
+    ${weekCard()}
     <div class="card">
       <h2>Cascade status <span class="sub">tap a stage</span></h2>
       <div class="grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
@@ -1839,6 +1916,8 @@ function renderHome(){
       <ul class="b">${DATA.research.principles.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
     </div>`;
   const tx = $('#tip-x'); if (tx) tx.addEventListener('click', () => { S.settings.tipDismissed = true; save(); renderHome(); });
+  $$('#view-home [data-wk]').forEach(c => c.addEventListener('change', () => { weekly().done[c.dataset.wk] = c.checked; save(); }));
+  $$('#view-home [data-sp]').forEach(c => c.addEventListener('change', () => { const [i, g] = c.dataset.sp.split(':'); (S.sprints[i] = S.sprints[i] || {})[g] = c.checked; save(); const cnt = $('#sp-count'); if (cnt) { const sp = currentSprint(); const done = sp.sp.goals.filter((x, gi) => (S.sprints[sp.i] || {})[gi]).length; cnt.textContent = `${done} of ${sp.sp.goals.length} done`; } }));
 }
 
 function renderFlow(){
@@ -1926,6 +2005,7 @@ function renderForecast(){
       <div class="tile"><div class="label">Over-committed</div><div class="value">${over.length} mo</div><div class="delta">${over.length ? 'projections scaled to your hours' : 'hours fit your budget'}</div></div>
     </div>
     ${over.length ? `<div class="notice warn small" style="margin-bottom:12px"><b>Hours bottleneck.</b> In ${over.length} of the next ${H} months the plan needs more than ${S.settings.hoursPerWeek} h/week (peak ${Math.max(...over.map(m => m.demand))} h). Revenue in those months is scaled down to what your hours can actually produce. Fix: raise your hours in Settings, delay a stage's start, or sunset stage 1 earlier.</div>` : ''}
+    <div id="goal-card"></div>
     <div id="fc-line"></div>
     <div id="fc-stack"></div>
     <div class="card"><h2>By stage <span class="sub">${esc(SCEN[sc].label)} · ${monLY(range[0])}–${monLY(range[1]-1)}</span></h2><div class="tv-wrap"><table class="tv"><tr><th>Stage</th><th>Trend</th><th>${esc(monthShort(sd, range[1]-1))}</th><th>Total</th></tr>
@@ -1940,6 +2020,7 @@ function renderForecast(){
       <li>Marking a stage Live uses its real start date; Paused stops future revenue; Killed removes it and its feeds.</li>
     </ul></div></details></div>`;
   $$('#sc-seg button').forEach(b => b.addEventListener('click', () => { S.settings.scenario = +b.dataset.sc; save(); syncScenario(); renderForecast(); }));
+  renderGoal(cm);
   $$('#hz-seg button').forEach(b => b.addEventListener('click', () => { S.settings.horizon = +b.dataset.h; save(); renderForecast(); }));
   const x = [], xl = []; for (let m = range[0]; m < range[1]; m++){ x.push(monthShort(sd, m)); xl.push(monthLabel(sd, m, true)); }
   const slice = (fi, key) => fAll[fi].months.slice(range[0], range[1]).map(m => m[key]);
@@ -2030,6 +2111,7 @@ function openStage(id){
   const body = `
     <div class="sec"><div class="chips">${catTag(s.cat)}${statusPill(id)}</div></div>
     <div class="sec"><h4>Status</h4><div class="seg lg" id="st-seg" style="display:flex">${Object.keys(STATUS).map(k2 => `<button type="button" class="${r.status === k2 ? 'on' : ''}" data-st="${k2}" style="flex:1">${STATUS[k2]}</button>`).join('')}</div>${r.startedAt ? `<div class="xs muted" style="margin-top:6px">Started ${esc(parseISO(r.startedAt).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}))}</div>` : ''}</div>
+    ${(() => { const h = stageHealth(s); if (!h) return ''; return h.state === 'behind' ? `<div class="sec"><div class="notice warn small"><b>Behind plan.</b> ${fmtMoney(h.last30)} in the last 30 days against ${fmtMoney(h.low)}/mo in the low case at this point. Check the kill rule below before putting in more hours.</div></div>` : h.state === 'ahead' ? `<div class="sec"><div class="notice money small"><b>Ahead of plan.</b> ${fmtMoney(h.last30)} in the last 30 days, above the ${fmtMoney(h.base)}/mo base case.</div></div>` : `<div class="sec"><div class="notice small">On track: ${fmtMoney(h.last30)} in the last 30 days, between the low (${fmtMoney(h.low)}) and base (${fmtMoney(h.base)}) plans.</div></div>`; })()}
     <div class="sec"><p><b>${esc(s.tagline)}</b></p><p style="margin-top:6px">${esc(s.why)}</p></div>
     <div class="sec"><h4>Numbers · ${esc(SCEN[sc].label)} case</h4><div class="kv">
       <div><b>${fmtMoney(s.rev.m3[k])}</b><span>Month 3 /mo</span></div><div><b>${fmtMoney(s.rev.m6[k])}</b><span>Month 6 /mo</span></div><div><b>${fmtMoney(s.rev.m12[k])}</b><span>Month 12 /mo</span></div>

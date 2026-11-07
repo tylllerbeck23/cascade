@@ -1,7 +1,7 @@
 /* Cascade — Service Worker
    Offline support + installability on iPhone, Android and desktop.
    Bump CACHE on every release. Zero third-party dependencies. */
-const CACHE = 'cascade-v4';
+const CACHE = 'cascade-v5';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
