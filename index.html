@@ -1,0 +1,2126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cascade</title>
+<meta name="description" content="A ten-stage side-hustle waterfall where every stage feeds the next. Track status, log revenue and forecast what the whole cascade can generate.">
+<meta name="theme-color" content="#0b1020">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cascade">
+<style>
+:root{
+  --bg:#0b1020;--bg2:#0e1527;--panel:#121a2e;--panel2:#182238;--panel3:#1f2b47;
+  --ink:#eef2ff;--ink2:#b6c0d9;--ink3:#7d88a6;--ink4:#55607c;
+  --hair:rgba(255,255,255,.07);--hair2:rgba(255,255,255,.13);
+  --brand:#38d1f0;--brand-ink:#06121c;--brand-soft:rgba(56,209,240,.13);
+  --money:#4fe3a0;--money-soft:rgba(79,227,160,.13);
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;
+  --good:#0ca30c;--warn:#fab219;--serious:#ec835a;--crit:#d03b3b;
+  --grid:#222b43;--axis:#2f3a57;
+  --r:16px;--r2:12px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+  --tab-h:60px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;min-height:100dvh;overscroll-behavior-y:none}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+input,select,textarea{font:inherit;color:var(--ink)}
+a{color:var(--brand)}
+#app{max-width:600px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:0;z-index:20;padding:calc(10px + var(--sat)) 16px 10px;background:rgba(11,16,32,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--hair)}
+.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.brand .logo{width:32px;height:32px;border-radius:9px;background:url(icon-192.png) center/cover;flex:none}
+.brand h1{font-size:17px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font-size:11px;color:var(--ink3);font-weight:500;margin-top:2px}
+.chip-btn{border:1px solid var(--hair2);background:var(--panel);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--ink2);display:inline-flex;align-items:center;gap:6px;min-height:34px}
+.chip-btn .dot{width:8px;height:8px;border-radius:50%;background:var(--brand)}
+.icon-btn{width:38px;height:38px;border-radius:12px;border:1px solid var(--hair2);background:var(--panel);display:inline-flex;align-items:center;justify-content:center;color:var(--ink2)}
+.icon-btn svg,.btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+main{flex:1;padding:14px 16px calc(var(--tab-h) + var(--sab) + 28px)}
+.view{display:none}.view.active{display:block}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- bottom tabs ---------- */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;background:rgba(14,21,39,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--hair);padding-bottom:var(--sab)}
+.tabbar .inner{display:flex;width:100%;max-width:600px}
+.tab{flex:1;height:var(--tab-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink3);background:none;border:0;font-size:10.5px;font-weight:600;letter-spacing:.02em}
+.tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab.active{color:var(--brand)}
+
+/* ---------- atoms ---------- */
+.card{background:var(--panel);border:1px solid var(--hair);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.card.tight{padding:12px 14px}
+.card h2{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card h2 .sub{font-weight:500;letter-spacing:0;text-transform:none;font-size:12px;color:var(--ink4)}
+.card h3{font-size:15px;font-weight:700;margin-bottom:6px}
+.muted{color:var(--ink3)}.soft{color:var(--ink2)}.small{font-size:12.5px}.xs{font-size:11.5px}
+.mono{font-family:var(--mono)}
+.tnum{font-variant-numeric:tabular-nums}
+.row{display:flex;align-items:center;gap:10px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stack>*+*{margin-top:8px}
+.hr{height:1px;background:var(--hair);margin:12px 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--hair2);background:var(--panel2);color:var(--ink);border-radius:12px;padding:11px 16px;font-size:14px;font-weight:600;min-height:44px}
+.btn.primary{background:var(--brand);color:var(--brand-ink);border-color:transparent}
+.btn.money{background:var(--money);color:#06231a;border-color:transparent}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--serious);border-color:rgba(236,131,90,.35)}
+.btn.sm{padding:7px 12px;min-height:34px;font-size:13px;border-radius:10px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.5;cursor:default}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;background:var(--panel3);color:var(--ink2);white-space:nowrap}
+.pill .d{width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.idle{color:var(--ink3)}
+.pill.building{background:var(--brand-soft);color:var(--brand)}
+.pill.live{background:rgba(12,163,12,.18);color:#4fd46a}
+.pill.paused{background:rgba(250,178,25,.16);color:var(--warn)}
+.pill.killed{background:rgba(208,59,59,.16);color:#f08a8a}
+.pill.earning{background:var(--money-soft);color:var(--money)}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--panel2);border:1px solid var(--hair);color:var(--ink2)}
+.tag .sw{width:9px;height:9px;border-radius:3px;flex:none}
+.tag.link{cursor:pointer}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}
+.swl{display:inline-block;width:14px;height:2px;border-radius:2px;flex:none}
+.notice{border-radius:12px;padding:10px 12px;font-size:13px;background:var(--panel2);border:1px solid var(--hair)}
+.notice.warn{border-color:rgba(250,178,25,.35);background:rgba(250,178,25,.08)}
+.notice.info{border-color:rgba(56,209,240,.35);background:var(--brand-soft)}
+.notice.money{border-color:rgba(79,227,160,.35);background:var(--money-soft)}
+
+/* ---------- figures ---------- */
+.hero{padding:18px 16px 16px;background:linear-gradient(160deg,var(--panel) 0%,var(--panel2) 100%)}
+.hero .label{font-size:12.5px;color:var(--ink3);font-weight:600}
+.hero .value{font-size:48px;font-weight:700;letter-spacing:-.03em;line-height:1.05;margin:4px 0 2px}
+.hero .delta{font-size:13px;color:var(--ink2)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--panel);border:1px solid var(--hair);border-radius:var(--r2);padding:12px 13px;min-height:74px}
+.tile .label{font-size:12px;color:var(--ink3);font-weight:600}
+.tile .value{font-size:22px;font-weight:700;letter-spacing:-.02em;margin-top:3px;line-height:1.1}
+.tile .delta{font-size:11.5px;color:var(--ink3);margin-top:4px}
+.tile .delta.up{color:var(--money)}
+.meter{height:6px;border-radius:999px;background:rgba(56,209,240,.18);overflow:hidden;margin-top:8px}
+.meter>i{display:block;height:100%;border-radius:999px;background:var(--brand)}
+.meter.over>i{background:var(--warn)}
+
+/* ---------- lists ---------- */
+.list{display:flex;flex-direction:column}
+.item{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--hair);min-height:52px}
+.item:first-child{border-top:0}
+.item .num{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex:none}
+.item .body{flex:1;min-width:0}
+.item .title{font-weight:600;font-size:14.5px;line-height:1.25}
+.item .sub{font-size:12px;color:var(--ink3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.item .amt.in{color:var(--money)}.item .amt.out{color:var(--serious)}
+.item.tap{cursor:pointer}
+.chev{color:var(--ink4);flex:none}
+.chev svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* ---------- stage cards (flow view) ---------- */
+.stage{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--hair);border-radius:var(--r);padding:14px;margin-bottom:10px;position:relative}
+.stage .head{display:flex;align-items:flex-start;gap:12px}
+.stage .num{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;flex:none}
+.stage .name{font-weight:700;font-size:15.5px;line-height:1.2}
+.stage .tagline{font-size:12.5px;color:var(--ink3);margin-top:3px}
+.stage .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.stage .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--hair)}
+.stage .nums b{display:block;font-size:14px;font-variant-numeric:tabular-nums}
+.stage .nums span{font-size:10.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.connector{height:14px;width:2px;background:var(--hair2);margin:-6px 0 -4px 30px;position:relative;z-index:1}
+
+/* ---------- flow map ---------- */
+.map{width:100%;height:auto;display:block;overflow:visible}
+.map text{font-family:var(--sans);fill:var(--ink)}
+.map .lbl{font-size:12.5px;font-weight:600}
+.map .cat{font-size:10.5px;fill:var(--ink3);font-weight:600}
+.map .edge{fill:none;stroke-width:2;opacity:.6;stroke-linecap:round}
+.map .node{cursor:pointer}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--ink2);margin-top:10px}
+.legend .k{display:inline-flex;align-items:center;gap:6px}
+.legend button.k{background:none;border:0;color:inherit;font:inherit;padding:2px 0}
+.legend button.k.off{opacity:.4;text-decoration:line-through}
+
+/* ---------- charts ---------- */
+.chart-card{position:relative}
+.chart-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.chart-head h2{margin:0;flex-direction:column;align-items:flex-start;gap:2px}
+.seg{display:inline-flex;background:var(--panel2);border:1px solid var(--hair);border-radius:10px;padding:2px}
+.seg button{border:0;background:transparent;color:var(--ink3);font-size:12px;font-weight:600;padding:5px 10px;border-radius:8px;min-height:28px}
+.seg button.on{background:var(--panel3);color:var(--ink)}
+.seg.lg button{padding:9px 12px;font-size:13px;min-height:38px}
+.plot{position:relative;width:100%}
+.plot svg{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y}
+.plot .grid line{stroke:var(--grid);stroke-width:1}
+.plot .axis line{stroke:var(--axis);stroke-width:1}
+.plot text{font-family:var(--sans);font-size:10.5px;fill:var(--ink3);font-variant-numeric:tabular-nums}
+.plot .xh{stroke:var(--ink3);stroke-width:1;opacity:0}
+.tip{position:absolute;z-index:5;pointer-events:none;background:#0b1224;border:1px solid var(--hair2);border-radius:10px;padding:8px 10px;font-size:12px;box-shadow:0 10px 30px -10px rgba(0,0,0,.8);min-width:140px;opacity:0;transition:opacity .08s}
+.tip.on{opacity:1}
+.tip .t{font-weight:700;color:var(--ink2);margin-bottom:4px}
+.tip .r{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:1px 0}
+.tip .r b{font-variant-numeric:tabular-nums;color:var(--ink)}
+.tip .r span{color:var(--ink3);display:inline-flex;align-items:center;gap:6px}
+table.tv{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+table.tv th{text-align:right;font-weight:600;color:var(--ink3);padding:6px 6px;border-bottom:1px solid var(--hair2);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+table.tv th:first-child,table.tv td:first-child{text-align:left}
+table.tv td{text-align:right;padding:7px 6px;border-bottom:1px solid var(--hair)}
+.tv-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.spark{display:block}
+
+/* ---------- sheets ---------- */
+.backdrop{position:fixed;inset:0;background:rgba(3,6,14,.6);z-index:40;opacity:0;transition:opacity .2s}
+.backdrop.on{opacity:1}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;margin:0 auto;max-width:600px;max-height:92dvh;background:var(--bg2);border:1px solid var(--hair2);border-bottom:0;border-radius:22px 22px 0 0;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .24s cubic-bezier(.2,.8,.2,1)}
+.sheet.on{transform:none}
+.sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--hair2);margin:10px auto 0}
+.sheet .sh{display:flex;align-items:flex-start;gap:12px;padding:10px 16px 12px;border-bottom:1px solid var(--hair)}
+.sheet .sh .ttl{flex:1;min-width:0}
+.sheet .sh h2{font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+.sheet .sh .x{width:34px;height:34px;border-radius:50%;border:1px solid var(--hair2);background:var(--panel);display:inline-flex;align-items:center;justify-content:center;color:var(--ink2);flex:none}
+.sheet .sb{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px calc(16px + var(--sab));overscroll-behavior:contain}
+.sec{margin-bottom:16px}
+.sec h4{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+.sec p{font-size:14px;color:var(--ink2)}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kv div{background:var(--panel);border:1px solid var(--hair);border-radius:10px;padding:9px 10px}
+.kv b{display:block;font-size:15px;font-variant-numeric:tabular-nums}
+.kv span{font-size:10.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.check{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid var(--hair);cursor:pointer}
+.check:first-child{border-top:0}
+.check input{width:20px;height:20px;accent-color:var(--brand);margin-top:1px;flex:none}
+.check span{font-size:14px;color:var(--ink)}
+.check input:checked+span{color:var(--ink3);text-decoration:line-through}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink3);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--panel);border:1px solid var(--hair2);border-radius:12px;padding:11px 12px;font-size:16px;min-height:46px;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brand)}
+.field textarea{min-height:90px;resize:vertical;line-height:1.4}
+.field .hint{font-size:11.5px;color:var(--ink4);margin-top:4px}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--hair2);border-radius:12px;background:var(--panel);overflow:hidden}
+.stepper button{width:40px;height:40px;border:0;background:transparent;font-size:18px;color:var(--ink2)}
+.stepper b{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.src{font-size:12.5px;color:var(--ink3);padding:6px 0;border-top:1px solid var(--hair);word-break:break-word}
+.src:first-child{border-top:0}
+.src a{color:var(--brand);text-decoration:none}
+details.acc{border-top:1px solid var(--hair)}
+details.acc:first-of-type{border-top:0}
+details.acc summary{list-style:none;cursor:pointer;padding:12px 0;display:flex;align-items:center;gap:10px;font-weight:600;font-size:14.5px}
+details.acc summary::-webkit-details-marker{display:none}
+details.acc summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--ink3);border-bottom:2px solid var(--ink3);transform:rotate(45deg);margin-left:auto;margin-right:4px;transition:transform .15s}
+details.acc[open] summary::after{transform:rotate(-135deg)}
+details.acc .acc-body{padding:0 0 12px}
+ul.b{padding-left:18px;color:var(--ink2);font-size:13.5px}
+ul.b li{margin:4px 0}
+.md h1,.md h2,.md h3,.md h4{margin:16px 0 6px;line-height:1.25}
+.md h1{font-size:19px}.md h2{font-size:16px}.md h3{font-size:14.5px}.md h4{font-size:13.5px;color:var(--ink2)}
+.md p{font-size:13.5px;color:var(--ink2);margin:6px 0}
+.md ul,.md ol{padding-left:18px;font-size:13.5px;color:var(--ink2);margin:6px 0}
+.md li{margin:3px 0}
+.md code{font-family:var(--mono);font-size:12px;background:var(--panel2);padding:1px 5px;border-radius:5px}
+.md table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0;display:block;overflow-x:auto}
+.md th,.md td{border-bottom:1px solid var(--hair);padding:5px 6px;text-align:left;vertical-align:top}
+.md th{color:var(--ink3);font-weight:600}
+.md blockquote{border-left:3px solid var(--hair2);padding-left:10px;color:var(--ink3);margin:6px 0}
+.md hr{border:0;border-top:1px solid var(--hair);margin:12px 0}
+.md a{word-break:break-word}
+
+.fab{position:fixed;right:max(16px,calc((100vw - 600px)/2 + 16px));bottom:calc(var(--tab-h) + var(--sab) + 16px);z-index:25;width:54px;height:54px;border-radius:18px;background:var(--money);color:#06231a;border:0;box-shadow:0 14px 30px -10px rgba(79,227,160,.6);display:none;align-items:center;justify-content:center}
+.fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
+.fab.show{display:flex}
+#toast{position:fixed;left:50%;bottom:calc(var(--tab-h) + var(--sab) + 18px);transform:translateX(-50%) translateY(10px);background:#0b1224;border:1px solid var(--hair2);color:var(--ink);padding:10px 14px;border-radius:12px;font-size:13px;font-weight:600;z-index:60;opacity:0;transition:all .2s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%)}
+.confirm{position:fixed;inset:0;z-index:70;background:rgba(3,6,14,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+.confirm .box{background:var(--bg2);border:1px solid var(--hair2);border-radius:16px;padding:16px;width:100%;max-width:360px}
+.confirm p{font-size:15px;margin-bottom:14px}
+.confirm .acts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.empty{padding:22px 10px;text-align:center;color:var(--ink3);font-size:13.5px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (min-width:600px){.hero .value{font-size:54px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div><h1>Cascade</h1><small id="top-sub">AI side-hustle waterfall</small></div>
+    </div>
+    <button class="chip-btn" id="scenario-chip" title="Cycle scenario" aria-label="Scenario"><span class="dot"></span><span id="scenario-label">Base</span></button>
+    <button class="icon-btn" id="settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </header>
+  <main id="main">
+    <section id="view-home" class="view" aria-label="Overview"></section>
+    <section id="view-flow" class="view" aria-label="Cascade"></section>
+    <section id="view-ledger" class="view" aria-label="Ledger"></section>
+    <section id="view-forecast" class="view" aria-label="Forecast"></section>
+    <section id="view-research" class="view" aria-label="Research"></section>
+  </main>
+  <button class="fab" id="fab" aria-label="Log revenue or expense"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  <nav class="tabbar" aria-label="Sections"><div class="inner">
+    <button class="tab" data-view="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
+    <button class="tab" data-view="flow"><svg viewBox="0 0 24 24"><path d="M4 4h6v5H4zM14 10h6v5h-6zM4 15h6v5H4z"/><path d="M10 6.5h2v6h2M10 17.5h2v-5h2"/></svg>Cascade</button>
+    <button class="tab" data-view="ledger"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>Ledger</button>
+    <button class="tab" data-view="forecast"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>Forecast</button>
+    <button class="tab" data-view="research"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Research</button>
+  </div></nav>
+  <div id="sheet-root"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+/*DATA-START*/
+window.CASCADE_DATA = {
+ "stages": [
+  {
+   "id": "s1",
+   "n": 1,
+   "name": "AI training & eval gigs",
+   "short": "AI gigs",
+   "cat": "cash",
+   "tagline": "Paid hourly to grade, write and debug for AI labs on DataAnnotation, Outlier, Mercor or Handshake.",
+   "why": "No startup cost and the fastest first dollar, usually within 1-3 weeks. It funds the first tools and teaches you exactly where models fail. It is unstable by design, so the plan retires it at month 5.",
+   "setup": 0,
+   "monthly": 0,
+   "hours": {
+    "build": 3,
+    "run": 4,
+    "maint": 4
+   },
+   "ramp": 1,
+   "ttfd": [
+    1,
+    3
+   ],
+   "rev": {
+    "m3": [
+     100,
+     350,
+     800
+    ],
+    "m6": [
+     100,
+     350,
+     800
+    ],
+    "m12": [
+     100,
+     350,
+     800
+    ]
+   },
+   "growth24": 1.0,
+   "plan": {
+    "start": 0,
+    "sunset": 5
+   },
+   "feeds": [
+    {
+     "to": "s2",
+     "what": "cash",
+     "boost": 0.05,
+     "persist": false,
+     "note": "Pays for Upwork Connects, a domain and the first month of tools."
+    },
+    {
+     "to": "s3",
+     "what": "insight",
+     "boost": 0.05,
+     "persist": true,
+     "note": "Your log of what models get wrong becomes newsletter material, within NDA limits."
+    }
+   ],
+   "actions": [
+    "Apply to three platforms at once: DataAnnotation, Outlier and Handshake AI, choosing the coding track.",
+    "Take each assessment in a quiet two-hour block and expect 1-3 weeks of silence.",
+    "Book two fixed evening sessions a week and log paid hours in the ledger.",
+    "Keep a private note of task types where the model failed, without client details.",
+    "Stop on schedule once freelance and retainer income beat gig income for two months."
+   ],
+   "kpis": [
+    {
+     "id": "hrs",
+     "label": "Paid hours this month",
+     "unit": "h"
+    },
+    {
+     "id": "rate",
+     "label": "Effective hourly rate",
+     "unit": "$"
+    }
+   ],
+   "kill": "No paid task from any of three platforms after six weeks.",
+   "tools": [
+    "DataAnnotation",
+    "Outlier",
+    "Handshake AI",
+    "Mercor"
+   ],
+   "findings": [
+    "Listed coding rates run $27.50-$50/hr on Outlier and $75-$80/hr medians on Mercor and micro1, but independent reports put DataAnnotation general work at $14-$20/hr and coding at $25-$45/hr (aitrainer.work; Talents for AI).",
+    "Pay moves fast: Mercor moved a general project from $21 to $16/hr in Nov 2025, and Outlier repricing of 30-50% was reported in 2026 (Futurism; aitrainer.work).",
+    "Work tends to arrive in floods and then drop to near zero for weeks, and deactivations often have no clear appeal (Talents for AI).",
+    "Planning model, not a measured median: about $750/month gross at 25 paid hours and $30/hr, and $0-$250 in a drought month (research notes).",
+    "This is 1099-style income: self-employment tax is 15.3% once net earnings reach $400, so set aside 25-30% (IRS)."
+   ],
+   "sources": [
+    {
+     "t": "Best AI training platforms for coders (aitrainer.work)",
+     "u": "https://aitrainer.work/guides/best-ai-training-platforms-developers-coders"
+    },
+    {
+     "t": "Is DataAnnotation legit? (Talents for AI)",
+     "u": "https://talentsforai.com/blog/is-dataannotation-tech-legit/"
+    },
+    {
+     "t": "Mercor pay cut on Meta project (Futurism)",
+     "u": "https://futurism.com/artificial-intelligence/mercor-meta-ai-labor"
+    },
+    {
+     "t": "Scale AI fallout and Outlier repricing (aitrainer.work)",
+     "u": "https://aitrainer.work/news/scale-ai-fallout-surge-ai-hyper-growth"
+    },
+    {
+     "t": "Self-employment tax (IRS)",
+     "u": "https://www.irs.gov/businesses/small-businesses-self-employed/self-employment-tax-social-security-and-medicare-taxes"
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "n": 2,
+   "name": "Claude Code freelance builds",
+   "short": "Freelance",
+   "cat": "service",
+   "tagline": "Fixed-price web apps, dashboards and AI integrations for clients found on Upwork and Contra.",
+   "why": "Your existing skill sold at market rates, in the category growing fastest on Upwork. Every project leaves reusable code, a testimonial and a clue about which niche to go deeper on.",
+   "setup": 20,
+   "monthly": 20,
+   "hours": {
+    "build": 4,
+    "run": 3,
+    "maint": 1.5
+   },
+   "ramp": 1,
+   "ttfd": [
+    3,
+    8
+   ],
+   "rev": {
+    "m3": [
+     0,
+     150,
+     600
+    ],
+    "m6": [
+     100,
+     350,
+     1000
+    ],
+    "m12": [
+     200,
+     500,
+     1500
+    ]
+   },
+   "growth24": 0.8,
+   "plan": {
+    "start": 0,
+    "sunset": null
+   },
+   "feeds": [
+    {
+     "to": "s4",
+     "what": "niche",
+     "boost": 0.1,
+     "persist": true,
+     "note": "The job you get asked for twice is the local retainer offer."
+    },
+    {
+     "to": "s5",
+     "what": "code",
+     "boost": 0.15,
+     "persist": true,
+     "note": "Each delivered automation, minus client data, becomes a sellable template."
+    },
+    {
+     "to": "s8",
+     "what": "niche",
+     "boost": 0.1,
+     "persist": true,
+     "note": "Repeated client requests pick the SaaS."
+    },
+    {
+     "to": "s3",
+     "what": "story",
+     "boost": 0.05,
+     "persist": true,
+     "note": "Shipped projects are build-in-public issues."
+    }
+   ],
+   "actions": [
+    "Turn three apps you already shipped into portfolio pieces with a 60-second screen recording each.",
+    "Open Upwork and Contra profiles that sell one offer: an AI dashboard or integration in 7 days, fixed price.",
+    "Send 10 proposals a week for four weeks, within 5 minutes of posting when you can, priced near the client's budget.",
+    "Quote fixed prices and use Claude Code to deliver in a fraction of the estimate.",
+    "Ask every client for a review and one referral at handoff."
+   ],
+   "kpis": [
+    {
+     "id": "proposals",
+     "label": "Proposals sent",
+     "unit": ""
+    },
+    {
+     "id": "clients",
+     "label": "Paying clients",
+     "unit": ""
+    }
+   ],
+   "kill": "Fewer than two paid projects after 60 proposals.",
+   "tools": [
+    "Upwork",
+    "Contra",
+    "Claude Pro or Max",
+    "Stripe invoicing"
+   ],
+   "findings": [
+    "Upwork demand for AI skills grew 109% in 2025 versus 23% for other skills; AI integration grew 178% and chatbot development 71% (Upwork In-Demand Skills 2026).",
+    "Proposals got replies 5.8% of the time in web development and 7.21% in AI and ML; replies were highest when sent 4-5 minutes after posting (GigRadar, 133,872 proposals).",
+    "Upwork moved to a variable 0-15% fee in May 2025, typically about 10%, and Connects cost $0.15 each, or $0.60-$2.40 per proposal (jobalerts.dev).",
+    "Contra charges freelancers 0% commission; the client pays $19 per contract (Contra, Nov 2026).",
+    "Commodity AI content is deflating: generative creative contract starts rose 90% while per-contract earnings fell 13% (Upwork Future Workforce Index 2026).",
+    "Automation specialists bill about $30-$60/hr on live Upwork posts, against an all-freelancer average near $39/hr (Upwork; Ciela)."
+   ],
+   "sources": [
+    {
+     "t": "Upwork In-Demand Skills 2026",
+     "u": "https://www.upwork.com/press/releases/upworks-in-demand-skills-2026-demand-for-top-ai-skills-more-than-doubles-as-ai-is-embedded-into-everyday-work"
+    },
+    {
+     "t": "Upwork Market Report 2026 (GigRadar)",
+     "u": "https://gigradar.io/blog/upwork-market-report-2026"
+    },
+    {
+     "t": "Upwork fees explained (jobalerts.dev)",
+     "u": "https://jobalerts.dev/blog/upwork-fees"
+    },
+    {
+     "t": "Contra commission-free",
+     "u": "https://contra.com/commission-free"
+    },
+    {
+     "t": "Upwork Future Workforce Index 2026 (QuiverQuant)",
+     "u": "https://www.quiverquant.com/news/Upwork+Releases+2026+Future+Workforce+Index%2C+Finding+AI+Is+Reshaping+Freelance+Work+and+Earnings"
+    }
+   ]
+  },
+  {
+   "id": "s3",
+   "n": 3,
+   "name": "Build-in-public newsletter",
+   "short": "Newsletter",
+   "cat": "audience",
+   "tagline": "A weekly Beehiiv issue documenting this exact cascade: what shipped, what earned, what failed, with real numbers.",
+   "why": "The email list is the one asset every later stage needs and the only one you fully own. Documenting the experiment means you never run out of topics, and staying consistent alone puts you ahead of most newsletters.",
+   "setup": 0,
+   "monthly": 0,
+   "hours": {
+    "build": 3,
+    "run": 2,
+    "maint": 2
+   },
+   "ramp": 1,
+   "ttfd": [
+    9,
+    20
+   ],
+   "rev": {
+    "m3": [
+     0,
+     0,
+     25
+    ],
+    "m6": [
+     0,
+     30,
+     150
+    ],
+    "m12": [
+     10,
+     120,
+     500
+    ]
+   },
+   "growth24": 2.0,
+   "plan": {
+    "start": 1,
+    "sunset": null
+   },
+   "feeds": [
+    {
+     "to": "s5",
+     "what": "list",
+     "boost": 0.15,
+     "persist": true,
+     "note": "Every template launches to the list first."
+    },
+    {
+     "to": "s7",
+     "what": "traffic",
+     "boost": 0.25,
+     "persist": true,
+     "note": "Warm email traffic converts affiliate links several times better than cold traffic."
+    },
+    {
+     "to": "s8",
+     "what": "users",
+     "boost": 0.15,
+     "persist": true,
+     "note": "First SaaS beta users come from readers."
+    },
+    {
+     "to": "s9",
+     "what": "students",
+     "boost": 0.2,
+     "persist": true,
+     "note": "Course buyers are readers who watched you get results."
+    }
+   ],
+   "actions": [
+    "Start a free Beehiiv publication and publish the cascade plan as issue 1 this week.",
+    "Ship one issue every week: what you built, what you earned, what failed and what's next.",
+    "Turn each issue into two short LinkedIn or X posts with a signup link.",
+    "Add the signup link to every client handoff, template and free tool.",
+    "Turn on Beehiiv Recommendations once you pass 100 subscribers."
+   ],
+   "kpis": [
+    {
+     "id": "subs",
+     "label": "Subscribers",
+     "unit": ""
+    },
+    {
+     "id": "issues",
+     "label": "Issues published",
+     "unit": ""
+    }
+   ],
+   "kill": "Under 300 subscribers after 26 weekly issues: keep writing, but stop counting it as revenue.",
+   "tools": [
+    "Beehiiv",
+    "LinkedIn",
+    "X"
+   ],
+   "findings": [
+    "Beehiiv newsletters launched in 2025 reached their first dollar after a median of 66 days (beehiiv State of Newsletters 2026).",
+    "Median free-to-paid conversion is 0.62%, so 1,000 subscribers at $10/month earns about $62/month (beehiiv State of Paid Newsletters 2026).",
+    "AI is a high-churn niche at 13.33% paid churn per month, about a 7.5-month lifetime, so sponsors and affiliates matter more than a paid tier (beehiiv).",
+    "Only 35% of newsletters publish a second issue, and 21 issues puts a writer in the top 5% (Reletter, 2023 data).",
+    "Small lists sell sponsorships at about $15-$35 CPM, roughly $25-$75 per send at 1,000 subscribers; the Beehiiv Ad Network needs 2,500 (beehiiv).",
+    "Beehiiv is free up to 2,500 subscribers and takes 0% of paid subscriptions (beehiiv pricing)."
+   ],
+   "sources": [
+    {
+     "t": "State of Newsletters 2026 (beehiiv)",
+     "u": "https://www.beehiiv.com/blog/the-state-of-newsletters-2026"
+    },
+    {
+     "t": "State of Paid Newsletters 2026 (beehiiv)",
+     "u": "https://www.beehiiv.com/blog/the-state-of-paid-newsletters-2026"
+    },
+    {
+     "t": "Newsletter fade (Reletter)",
+     "u": "https://reletter.com/blog/newsletter-fade/"
+    },
+    {
+     "t": "beehiiv pricing",
+     "u": "https://www.beehiiv.com/pricing"
+    }
+   ]
+  },
+  {
+   "id": "s4",
+   "n": 4,
+   "name": "Local-business AI retainers",
+   "short": "Retainers",
+   "cat": "service",
+   "tagline": "Missed-call text-back and automatic review requests for Lehigh Valley dentists, contractors and salons, sold as setup plus a monthly fee.",
+   "why": "Recurring revenue from businesses that will never find you on Upwork. One working demo on your phone beats fifty proposals, and the retainer stack becomes the micro-SaaS spec.",
+   "setup": 40,
+   "monthly": 25,
+   "hours": {
+    "build": 3,
+    "run": 2,
+    "maint": 1
+   },
+   "ramp": 1,
+   "ttfd": [
+    6,
+    14
+   ],
+   "rev": {
+    "m3": [
+     0,
+     100,
+     300
+    ],
+    "m6": [
+     0,
+     300,
+     800
+    ],
+    "m12": [
+     150,
+     600,
+     1500
+    ]
+   },
+   "growth24": 1.3,
+   "plan": {
+    "start": 2,
+    "sunset": null
+   },
+   "feeds": [
+    {
+     "to": "s5",
+     "what": "templates",
+     "boost": 0.1,
+     "persist": true,
+     "note": "Each workflow becomes a template product."
+    },
+    {
+     "to": "s8",
+     "what": "niche",
+     "boost": 0.2,
+     "persist": true,
+     "note": "The workflow three clients pay for is the SaaS."
+    },
+    {
+     "to": "s3",
+     "what": "proof",
+     "boost": 0.1,
+     "persist": true,
+     "note": "Before-and-after numbers from real clients are the best issues."
+    }
+   ],
+   "actions": [
+    "Pick one vertical, such as dentists, contractors or salons.",
+    "Build a missed-call text-back demo in 48 hours with Twilio and n8n, and register A2P messaging.",
+    "Show it in person to 20 businesses near campus, starting with ones you already use.",
+    "Price it at $500 setup plus $150 a month, with a written scope and liability cap.",
+    "Ask client 1 for introductions, since referrals close far better than cold email."
+   ],
+   "kpis": [
+    {
+     "id": "retainers",
+     "label": "Active retainers",
+     "unit": ""
+    },
+    {
+     "id": "mrr",
+     "label": "Retainer MRR",
+     "unit": "$"
+    }
+   ],
+   "kill": "Zero signed retainers after 40 real conversations.",
+   "tools": [
+    "Twilio",
+    "n8n",
+    "Claude API",
+    "Stripe"
+   ],
+   "findings": [
+    "Missed-call text-back sells at $99-$300/month for most services, and managed agency offers run about $497/month (Quo; Ciela).",
+    "Self-reported agency anecdote: first client at month 3 paid $500 plus $150/month; 7 clients by month 12, with 60+ hour weeks early on (BeginnersinAI, unverified).",
+    "In that anecdote, cold email to 40 local businesses got 1 reply, and 5 of 7 clients came from client 1's referrals (BeginnersinAI).",
+    "Retainer clients churn about 2.47% per month, a 40-month average lifespan, versus 6.69% for project clients (Focus Digital 2026).",
+    "58% of small businesses used generative AI in 2025, up from 23% in 2023 (U.S. Chamber).",
+    "SMS needs A2P registration, about $19.50 one-time plus $1.50-$3/month (Quo)."
+   ],
+   "sources": [
+    {
+     "t": "Missed-call text-back software (Quo)",
+     "u": "https://www.quo.com/blog/missed-call-text-back-software/"
+    },
+    {
+     "t": "AI agency success story (BeginnersinAI)",
+     "u": "https://beginnersinai.org/ai-agency-success-story/"
+    },
+    {
+     "t": "Agency churn study 2026 (Focus Digital)",
+     "u": "https://focus-digital.co/average-marketing-agency-churn/"
+    },
+    {
+     "t": "U.S. Chamber small business AI report (IPWatchdog)",
+     "u": "https://ipwatchdog.com/2025/08/18/us-chamber-report-small-businesses-rapidly-adopting-ai-despite-regulatory-concerns/"
+    }
+   ]
+  },
+  {
+   "id": "s5",
+   "n": 5,
+   "name": "Profession template packs",
+   "short": "Templates",
+   "cat": "product",
+   "tagline": "Package the automations from stages 2 and 4 into $25-$79 template packs for one named profession, sold on your own storefront.",
+   "why": "Products made from work you were already paid for. Revenue alone is small, but every buyer joins the list and the packs become course material.",
+   "setup": 0,
+   "monthly": 0,
+   "hours": {
+    "build": 3,
+    "run": 1,
+    "maint": 1
+   },
+   "ramp": 1,
+   "ttfd": [
+    3,
+    10
+   ],
+   "rev": {
+    "m3": [
+     0,
+     15,
+     80
+    ],
+    "m6": [
+     5,
+     60,
+     300
+    ],
+    "m12": [
+     20,
+     150,
+     700
+    ]
+   },
+   "growth24": 1.3,
+   "plan": {
+    "start": 5,
+    "sunset": null
+   },
+   "feeds": [
+    {
+     "to": "s3",
+     "what": "list",
+     "boost": 0.1,
+     "persist": true,
+     "note": "Every buyer is added to the newsletter."
+    },
+    {
+     "to": "s9",
+     "what": "curriculum",
+     "boost": 0.1,
+     "persist": true,
+     "note": "Packs become course modules."
+    }
+   ],
+   "actions": [
+    "Pick the two automations clients asked for most and strip all client data.",
+    "Write a one-page setup guide and record a 5-minute walkthrough for each.",
+    "List them on Payhip at $25-$79, with a free lite version as a lead magnet.",
+    "Launch each pack to the newsletter first, then one niche community.",
+    "Do not sell prompt bundles on Etsy, which banned them in October 2026."
+   ],
+   "kpis": [
+    {
+     "id": "sales",
+     "label": "Sales this month",
+     "unit": ""
+    },
+    {
+     "id": "packs",
+     "label": "Packs live",
+     "unit": ""
+    }
+   ],
+   "kill": "Fewer than 10 sales in 90 days across three launches.",
+   "tools": [
+    "Payhip",
+    "Gumroad",
+    "Loom"
+   ],
+   "findings": [
+    "Only 2.3% of about 4M Gumroad products have ever sold; the median seller has earned about $90 lifetime, and the median paid price is $7 (Profitable.app).",
+    "The median paid Notion template on Gumroad earned about $520 lifetime, and 49% earned under $500 (InsightRaider, 365 templates).",
+    "Niche profession templates face far less competition: top therapist templates show 8-45 reviews versus 1,000+ for generic ones, priced $25-$79 (Kupkaike).",
+    "Etsy banned standalone AI prompt bundles and AI-written instructions on Oct 22, 2026 (Etsy Seller Handbook via GreenOnion).",
+    "Payhip's free plan takes 5% plus processor fees and handles US sales tax; Lemon Squeezy is moving users to Stripe Managed Payments, so treat it as unsettled (Payhip; Lemon Squeezy)."
+   ],
+   "sources": [
+    {
+     "t": "Gumroad stats (Profitable.app)",
+     "u": "https://profitable.app/gumroad/stats"
+    },
+    {
+     "t": "Notion templates on Gumroad (InsightRaider)",
+     "u": "https://insightraider.com/en/answers/how-much-can-you-make-selling-notion-templates-on-gumroad"
+    },
+    {
+     "t": "Is selling Notion templates still profitable (Kupkaike)",
+     "u": "https://kupkaike.com/blog/is-selling-notion-templates-still-profitable-2026"
+    },
+    {
+     "t": "Etsy AI rules summary (GreenOnion)",
+     "u": "https://greenonion.ai/blog/etsy-copyright-ai-images"
+    },
+    {
+     "t": "Payhip pricing",
+     "u": "https://payhip.com/pricing"
+    },
+    {
+     "t": "Lemon Squeezy 2026 update",
+     "u": "https://www.lemonsqueezy.com/blog/2026-update"
+    }
+   ]
+  },
+  {
+   "id": "s6",
+   "n": 6,
+   "name": "Free niche tool",
+   "short": "Free tool",
+   "cat": "software",
+   "tagline": "A free single-page calculator or generator your clients keep asking for, with email capture.",
+   "why": "Utility pages still get search traffic while articles lose it to AI Overviews. It is the cheapest lead magnet you can build with Claude Code, and its users feed the list, the affiliate links and the SaaS.",
+   "setup": 12,
+   "monthly": 0,
+   "hours": {
+    "build": 3,
+    "run": 0.5,
+    "maint": 0.5
+   },
+   "ramp": 1,
+   "ttfd": [
+    10,
+    24
+   ],
+   "rev": {
+    "m3": [
+     0,
+     0,
+     0
+    ],
+    "m6": [
+     0,
+     15,
+     80
+    ],
+    "m12": [
+     0,
+     50,
+     250
+    ]
+   },
+   "growth24": 1.8,
+   "plan": {
+    "start": 6,
+    "sunset": null
+   },
+   "feeds": [
+    {
+     "to": "s3",
+     "what": "signups",
+     "boost": 0.15,
+     "persist": true,
+     "note": "Tool users become subscribers."
+    },
+    {
+     "to": "s8",
+     "what": "users",
+     "boost": 0.1,
+     "persist": true,
+     "note": "Heavy users are the SaaS beta list."
+    },
+    {
+     "to": "s7",
+     "what": "traffic",
+     "boost": 0.1,
+     "persist": true,
+     "note": "Search traffic carries affiliate links."
+    }
+   ],
+   "actions": [
+    "Pick a calculator or generator that clients in your retainer niche ask for.",
+    "Ship it as a single-file page on Netlify in a weekend, with email capture after the result.",
+    "Target one long-tail search phrase in the title and first sentence.",
+    "Post it in three communities where that profession gathers.",
+    "Add a small paid tier only once 500 people have used it."
+   ],
+   "kpis": [
+    {
+     "id": "users",
+     "label": "Monthly users",
+     "unit": ""
+    },
+    {
+     "id": "signups",
+     "label": "Email signups",
+     "unit": ""
+    }
+   ],
+   "kill": "Under 200 monthly users after four months.",
+   "tools": [
+    "Netlify",
+    "Claude Code",
+    "Beehiiv form"
+   ],
+   "findings": [
+    "Pages with an AI Overview get 58% fewer clicks at position 1 (Ahrefs, Feb 2026), and 68% of US searches ended with no click in early 2026 (SparkToro).",
+    "Utility pages still pull traffic: Ahrefs documents free calculators and converters as lead generation drawing hundreds of thousands to millions of monthly visits (Ahrefs).",
+    "70.4% of Chrome extensions have 100 users or fewer, and one 40,000-daily-user extension earned $0 in mid-2026: users are not revenue (Konabayev; TrustMRR).",
+    "Vercel's free Hobby tier is for non-commercial use only, so a paid tool needs Pro at $20/month or another host (Vercel).",
+    "Landing pages convert at a 6.6% median across 41,000 pages (Unbounce via ClickMinded)."
+   ],
+   "sources": [
+    {
+     "t": "AI Overviews reduce clicks (Ahrefs)",
+     "u": "https://ahrefs.com/blog/ai-overviews-reduce-clicks-update/"
+    },
+    {
+     "t": "Less than a third of searches send a click (SparkToro)",
+     "u": "https://sparktoro.com/blog/in-2026-less-than-one-third-of-google-searches-still-send-a-click/"
+    },
+    {
+     "t": "The free tools SEO strategy (Ahrefs)",
+     "u": "https://ahrefs.com/blog/the-free-tools-seo-strategy/"
+    },
+    {
+     "t": "Vercel pricing",
+     "u": "https://vercel.com/pricing"
+    },
+    {
+     "t": "Landing page benchmarks (ClickMinded)",
+     "u": "https://www.clickminded.com/landing-page-conversion-benchmark/"
+    }
+   ]
+  },
+  {
+   "id": "s7",
+   "n": 7,
+   "name": "Partner & affiliate links",
+   "short": "Affiliates",
+   "cat": "audience",
+   "tagline": "Recommend the exact tools you use, with disclosed partner links, across the newsletter, templates and free tool.",
+   "why": "Almost no extra hours. It earns from traffic and trust the earlier stages already built, and recurring SaaS programs pay for a year per customer.",
+   "setup": 0,
+   "monthly": 0,
+   "hours": {
+    "build": 1,
+    "run": 0.5,
+    "maint": 0.5
+   },
+   "ramp": 1,
+   "ttfd": [
+    6,
+    20
+   ],
+   "rev": {
+    "m3": [
+     0,
+     0,
+     10
+    ],
+    "m6": [
+     0,
+     15,
+     80
+    ],
+    "m12": [
+     10,
+     60,
+     300
+    ]
+   },
+   "growth24": 2.0,
+   "plan": {
+    "start": 7,
+    "sunset": null
+   },
+   "feeds": [],
+   "actions": [
+    "Join the Beehiiv, Kit, HubSpot and ElevenLabs partner programs, but only for tools you actually use.",
+    "Write one honest 'my stack' page with a clear 'Paid link' disclosure.",
+    "Put contextual links inside tutorials and template guides, not in a link dump.",
+    "Track clicks per issue and drop links nobody uses."
+   ],
+   "kpis": [
+    {
+     "id": "clicks",
+     "label": "Affiliate clicks",
+     "unit": ""
+    },
+    {
+     "id": "conversions",
+     "label": "Paid referrals",
+     "unit": ""
+    }
+   ],
+   "kill": "Under $50/month after six months with 1,000+ subscribers.",
+   "tools": [
+    "Beehiiv Partner Program",
+    "Kit affiliates",
+    "PartnerStack",
+    "Impact"
+   ],
+   "findings": [
+    "Beehiiv and Kit pay 50% of referred revenue for 12 months, HubSpot pays 30% recurring for a year, and ElevenLabs pays 22% for 12 months (official program pages).",
+    "Notion's affiliate program is not accepting new affiliates (Notion).",
+    "Average SaaS referral-to-sale conversion is 0.8% over 90 days, while top affiliates with warm email traffic reach 5-10% (Rewardful; Affinco).",
+    "Amazon pays 1-4.5% on most categories with a 24-hour cookie, so recurring SaaS programs pay far better in this niche (Amazon).",
+    "FTC rules require a clear disclosure such as 'Paid link' next to each recommendation (FTC Endorsement Guides)."
+   ],
+   "sources": [
+    {
+     "t": "beehiiv Partner Program",
+     "u": "https://academy.beehiiv.com/p/partner-program"
+    },
+    {
+     "t": "Kit affiliate program",
+     "u": "https://kit.com/affiliate"
+    },
+    {
+     "t": "HubSpot affiliates",
+     "u": "https://www.hubspot.com/partners/affiliates"
+    },
+    {
+     "t": "State of SaaS affiliate programs (Rewardful)",
+     "u": "https://www.rewardful.com/articles/state-of-saas-affiliate-programs-report"
+    },
+    {
+     "t": "Endorsement Guides FAQ (FTC)",
+     "u": "https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking"
+    }
+   ]
+  },
+  {
+   "id": "s8",
+   "n": 8,
+   "name": "Vertical micro-SaaS",
+   "short": "Micro-SaaS",
+   "cat": "software",
+   "tagline": "Turn the workflow three retainer clients pay for into a $30-$50/month app for that one profession.",
+   "why": "The highest ceiling in the cascade, and the stage everything upstream de-risks: the niche, the spec, the first users and the launch list already exist. It still starts late on purpose, because most products earn little.",
+   "setup": 20,
+   "monthly": 25,
+   "hours": {
+    "build": 3,
+    "run": 3,
+    "maint": 2
+   },
+   "ramp": 2,
+   "ttfd": [
+    6,
+    16
+   ],
+   "rev": {
+    "m3": [
+     0,
+     20,
+     120
+    ],
+    "m6": [
+     20,
+     120,
+     500
+    ],
+    "m12": [
+     60,
+     350,
+     1500
+    ]
+   },
+   "growth24": 1.8,
+   "plan": {
+    "start": 8,
+    "sunset": null
+   },
+   "feeds": [
+    {
+     "to": "s10",
+     "what": "asset",
+     "boost": 0.3,
+     "persist": true,
+     "note": "Recurring revenue is the thing you can sell."
+    },
+    {
+     "to": "s9",
+     "what": "proof",
+     "boost": 0.1,
+     "persist": true,
+     "note": "A real product makes the course credible."
+    },
+    {
+     "to": "s3",
+     "what": "story",
+     "boost": 0.05,
+     "persist": true,
+     "note": "Open revenue numbers are strong issues."
+    }
+   ],
+   "actions": [
+    "Choose the one workflow at least three clients paid for.",
+    "Build the smallest version with Supabase auth and Stripe or Lemon Squeezy billing.",
+    "Move retainer clients onto it at a founding price first.",
+    "Cap AI usage per user and price at 3-5 times model cost.",
+    "Launch to the newsletter, then to that profession's communities."
+   ],
+   "kpis": [
+    {
+     "id": "mrr",
+     "label": "MRR",
+     "unit": "$"
+    },
+    {
+     "id": "paying",
+     "label": "Paying customers",
+     "unit": ""
+    }
+   ],
+   "kill": "Under $300 MRR six months after launch.",
+   "tools": [
+    "Supabase",
+    "Stripe",
+    "Netlify or Vercel Pro",
+    "Claude API"
+   ],
+   "findings": [
+    "In a census of 10,150 listed indie products, 26.1% never earned, the median earner made $169 in 30 days, and about 3.5% reached $5K MRR (TrustMRR via TechStartups).",
+    "An 'AI' label gave no edge: 49.3% of AI products earned versus 49.0% of others (same census).",
+    "Products at $5K+ MRR charge a $37 median subscription versus $13 overall, while Productivity and Utilities hit $5K only 0.6% and 0.5% of the time (same census).",
+    "17.3% of new subscription apps reach $1K/month within 2 years, and the median app earns about $72/month a year after launch (RevenueCat 2026).",
+    "A small app runs on about $20-$45/month before AI usage (Vercel and Supabase pricing).",
+    "Founders with 4+ products reached $5K MRR 14.1% of the time versus 5.0% with one, a correlation and not proof (TrustMRR census)."
+   ],
+   "sources": [
+    {
+     "t": "What share of indie products make $100K ARR (TechStartups)",
+     "u": "https://techstartups.com/2026/09/28/what-percentage-of-indie-hacker-products-make-100k-in-arr/"
+    },
+    {
+     "t": "State of Subscription Apps (RevenueCat)",
+     "u": "https://www.revenuecat.com/state-of-subscription-apps/"
+    },
+    {
+     "t": "Supabase pricing",
+     "u": "https://supabase.com/pricing"
+    },
+    {
+     "t": "AI wrapper monetization models (Dodo Payments)",
+     "u": "https://dodopayments.com/blogs/ai-wrapper-business-model-monetization/"
+    }
+   ]
+  },
+  {
+   "id": "s9",
+   "n": 9,
+   "name": "Cohort course for pros",
+   "short": "Course",
+   "cat": "product",
+   "tagline": "Teach one profession to automate its admin with Claude, using your retainer and SaaS results as the curriculum.",
+   "why": "High margin, sold to an audience you already own. It is credible only after stages 2-8 have produced real results, which is why it comes this late.",
+   "setup": 0,
+   "monthly": 0,
+   "hours": {
+    "build": 2,
+    "run": 2,
+    "maint": 1
+   },
+   "ramp": 1,
+   "ttfd": [
+    2,
+    8
+   ],
+   "rev": {
+    "m3": [
+     0,
+     60,
+     250
+    ],
+    "m6": [
+     30,
+     180,
+     600
+    ],
+    "m12": [
+     60,
+     300,
+     1200
+    ]
+   },
+   "growth24": 1.3,
+   "plan": {
+    "start": 14,
+    "sunset": null
+   },
+   "feeds": [
+    {
+     "to": "s2",
+     "what": "referrals",
+     "boost": 0.05,
+     "persist": true,
+     "note": "Students refer done-for-you work."
+    },
+    {
+     "to": "s7",
+     "what": "students",
+     "boost": 0.1,
+     "persist": true,
+     "note": "Students buy the tools you teach."
+    }
+   ],
+   "actions": [
+    "Run a free 60-minute live workshop for the newsletter.",
+    "Pre-sell a four-week cohort at a founding price before recording anything.",
+    "Record the live sessions and sell them as an evergreen course.",
+    "Sell a specific outcome to people who bill for their work, not 'learn Claude Code'."
+   ],
+   "kpis": [
+    {
+     "id": "students",
+     "label": "Students",
+     "unit": ""
+    },
+    {
+     "id": "presales",
+     "label": "Pre-sales",
+     "unit": ""
+    }
+   ],
+   "kill": "Fewer than 10 pre-sales from a list of 1,000+.",
+   "tools": [
+    "Kit or Gumroad",
+    "Zoom",
+    "Loom"
+   ],
+   "findings": [
+    "Claude Club charges $97/month and had 526 members on Oct 31, 2026, down from 546 in August (AI Funnel Insider).",
+    "A tracker models the median paid Skool community at about $1,000-$1,200/month and communities under 100 members near $450-$500, as upper bounds (Profitable.app).",
+    "Justin Welsh launched a $50 course at 20,000+ followers and made $10,482 in month one, after consulting funded him (Welsh thread, self-reported).",
+    "The best-documented buyers of Claude communities are freelancers and agency operators who bill for their work, not beginners (AI Funnel Insider).",
+    "No independent income data exists for Claude Code educators, so this stage's numbers are the least certain (research gap)."
+   ],
+   "sources": [
+    {
+     "t": "Claude Club review (AI Funnel Insider)",
+     "u": "https://aifunnelinsider.com/claude-club-skool-review-2026/"
+    },
+    {
+     "t": "Skool stats (Profitable.app)",
+     "u": "https://profitable.app/skool/stats"
+    },
+    {
+     "t": "Justin Welsh thread, Oct 2021",
+     "u": "https://threadreaderapp.com/thread/1453029782631895043.html"
+    }
+   ]
+  },
+  {
+   "id": "s10",
+   "n": 10,
+   "name": "Reinvest & exit",
+   "short": "Portfolio",
+   "cat": "software",
+   "tagline": "Put 30% of profit back in, start a second small product from the failure log, or sell the SaaS and restart the cascade.",
+   "why": "The waterfall turns into a flywheel. Capital and proof from stages 1-9 buy bets you could not afford at the start, and a sale turns monthly revenue into a lump sum.",
+   "setup": 0,
+   "monthly": 0,
+   "hours": {
+    "build": 0.5,
+    "run": 0.5,
+    "maint": 0.5
+   },
+   "ramp": 1,
+   "ttfd": [
+    8,
+    26
+   ],
+   "rev": {
+    "m3": [
+     0,
+     0,
+     0
+    ],
+    "m6": [
+     0,
+     0,
+     100
+    ],
+    "m12": [
+     0,
+     80,
+     400
+    ]
+   },
+   "growth24": 2.0,
+   "plan": {
+    "start": 18,
+    "sunset": null
+   },
+   "feeds": [
+    {
+     "to": "s8",
+     "what": "capital",
+     "boost": 0.1,
+     "persist": false,
+     "note": "Pays for ads, a contractor or better tooling."
+    }
+   ],
+   "actions": [
+    "Set a rule: 30% of net profit goes back into the strongest stage.",
+    "Get a free valuation by listing the SaaS privately on Acquire.com or TrustMRR.",
+    "Pick the next product from the stage 1 failure log and client requests.",
+    "Shut down anything that misses its kill rule and keep its code."
+   ],
+   "kpis": [
+    {
+     "id": "reinvested",
+     "label": "Reinvested to date",
+     "unit": "$"
+    }
+   ],
+   "kill": "If no stage clears $500/month by month 12, keep the list and code and restart with a new vertical.",
+   "tools": [
+    "Acquire.com",
+    "TrustMRR"
+   ],
+   "findings": [
+    "Small SaaS listings ask a median 2.0x trailing revenue or 3.4x profit, and Acquire.com deals closed at a median 3.9x SDE (BigIdeasDB, secondary and unverified).",
+    "A product at $1K MRR with about $10K annual profit implies roughly $24K-$39K at those multiples (research derivation).",
+    "Xnapper at about $4K MRR sold for $150K in March 2024, while Black Magic at $14K MRR sold for $128K after an API price shock (Supabird, self-reported).",
+    "In the TrustMRR census, products older than 4 years hit $5K MRR 19% of the time versus about 1% under 3 months old (TechStartups).",
+    "Pieter Levels counts only 4 of 70+ projects that made money and grew, about 5% (dev.to analysis)."
+   ],
+   "sources": [
+    {
+     "t": "State of SaaS valuations 2026 (BigIdeasDB)",
+     "u": "https://bigideasdb.com/state-of-saas-valuations-2026"
+    },
+    {
+     "t": "Tony Dinh profile (Supabird)",
+     "u": "https://supabird.io/articles/tony-dinh-from-a-105k-developer-to-a-1-million-indie-hacking-marvel"
+    },
+    {
+     "t": "Indie product census (TechStartups)",
+     "u": "https://techstartups.com/2026/09/28/what-percentage-of-indie-hacker-products-make-100k-in-arr/"
+    },
+    {
+     "t": "751 Pieter Levels posts (dev.to)",
+     "u": "https://dev.to/idonthaveapen/failures-behind-a-420kmonth-solo-founder-i-read-all-751-of-pieter-levels-blog-posts-1h3b"
+    }
+   ]
+  }
+ ],
+ "research": {
+  "headline": [
+   {
+    "label": "Median side hustle",
+    "value": "$200/mo",
+    "note": "Bankrate 2025; the average is $885 because of a few big earners"
+   },
+   {
+    "label": "Earn over $1,000/mo",
+    "value": "14%",
+    "note": "Bankrate 2025 survey of US side hustlers"
+   },
+   {
+    "label": "Indie products never earning",
+    "value": "26%",
+    "note": "TrustMRR census of 10,150 products, Sept 2026"
+   },
+   {
+    "label": "Gumroad products ever sold",
+    "value": "2.3%",
+    "note": "Profitable.app snapshot of about 4M products"
+   },
+   {
+    "label": "Newsletter first dollar",
+    "value": "66 days",
+    "note": "beehiiv median for 2025 launches"
+   },
+   {
+    "label": "Newsletters with a 2nd issue",
+    "value": "35%",
+    "note": "Reletter, 1.7M newsletters (2023 data)"
+   }
+  ],
+  "principles": [
+   "Cash first: services and gig work pay within weeks, so they fund the slower stages, the same order Daniel Vassallo and Justin Welsh followed.",
+   "Never more than about 12 hours a week: at most two stages are being built while the rest run in maintenance.",
+   "Every stage leaves an asset a later stage uses, whether cash, code, a list, proof or a niche.",
+   "Sell a specific outcome to a named buyer at $25-$50, not a generic tool to everyone at $5.",
+   "Own the list: email is the only asset every source treats as fully yours.",
+   "Write the kill rule before a stage starts and enforce it.",
+   "Plan around the median: most products earn little, and the waterfall is how you improve the odds."
+  ],
+  "playbook": {
+   "weekly": [
+    "One 90-minute deep-work block on the stage you are building.",
+    "Two fixed evening sessions for paid work: gig tasks or client delivery.",
+    "One newsletter issue with real numbers from the Cascade ledger.",
+    "A 30-minute outreach slot for proposals, local visits or follow-ups.",
+    "Friday review: log every dollar and cost, update KPIs, check each stage's kill rule."
+   ],
+   "sprints": [
+    {
+     "name": "Months 0-2: Cash floor",
+     "goals": [
+      "Pass assessments on two training platforms",
+      "Publish three portfolio pieces",
+      "Send 40 proposals and land the first paid project",
+      "Publish newsletter issue 1"
+     ]
+    },
+    {
+     "name": "Months 2-5: First recurring revenue",
+     "goals": [
+      "Build the missed-call demo and register A2P",
+      "Show it to 20 local businesses",
+      "Sign two retainers",
+      "Reach 10 newsletter issues",
+      "Retire gig work once services beat it"
+     ]
+    },
+    {
+     "name": "Months 5-8: Own the audience",
+     "goals": [
+      "Launch two template packs on your own storefront",
+      "Ship the free tool with email capture",
+      "Publish the disclosed 'my stack' page",
+      "Reach 300 subscribers"
+     ]
+    },
+    {
+     "name": "Months 8-14: Productize",
+     "goals": [
+      "Build the SaaS for the retainer niche",
+      "Move clients onto it at a founding price",
+      "Reach $300 MRR",
+      "Run a free workshop to test course demand"
+     ]
+    }
+   ],
+   "kill": [
+    "Kill or pause any stage that misses its written kill rule.",
+    "Never have more than two stages in build mode at once.",
+    "If the plan needs more hours than your budget for two weeks running, pause the newest stage.",
+    "Spend nothing beyond tools under $30/month until a stage earns.",
+    "If nothing reaches $500/month by month 12, keep the list and code and restart with a different vertical."
+   ]
+  },
+  "reportMd": "# Sell Services First, Let Products Compound Later\n\nFor a Pennsylvania college student who is good with Claude Code, has 10–15 hours a week and less than $500, the AI side hustles that reliably make money in late 2026 are the ones that sell time or outcomes. Those are AI-training gigs (realistically $14–$45 an hour, not the $75–$80 medians in listings), fixed-price Claude Code builds sold on Upwork and Contra, and automation retainers for local businesses at about $500 setup plus $99–$300 a month. Products, audiences and SaaS still work, but their measured medians are small. Of 10,150 listed indie products, 26.1% never earned anything and the median earner made $169 in 30 days. Only 2.3% of Gumroad products have ever sold. Those stages belong later, built from the code, clients and proof the service stages produce. I ran the ten-stage plan already in the Cascade dashboard through the dashboard's own forecast engine. The base case gives about **$7,200 of revenue in year one and $27,000 in year two**: roughly $34,000 over 24 months, ending at about $3,000 a month. The low case is $1,500 then $6,000. The high case is $21,600 then $94,000. Services (stages 1, 2 and 4) produce **90% of base revenue in year one and 60% over 24 months**. For scale, the median US side hustle earns $200 a month and only 14% earn more than $1,000. The base case's roughly $1,200 a month at month 12 is therefore a top-seventh result, and the low case is closer to what a typical attempt earns. Year one pays about **$11.50 per hour worked**, less than steady gig work would. The plan's case rests on year two and on assets the operator owns: an email list, reusable code and a SaaS that can be sold. The evidence is uneven. Platform and government data are strong, most income stories are self-reported, and two of the seven research tracks were cut short. Treat every per-stage number as a planning estimate, not a measured median.\n\n## The median side hustle earns $200 a month, and an \"AI\" label does not raise it\n\nThe best starting point is the base rate. Bankrate's 2025 survey, checked at the source, found **27% of US adults have a side hustle, median income $200 a month, average $885, and only 14% earn more than $1,000 a month**. Gen Z was the least likely generation to clear even $100 a month (45%) ([Bankrate](https://www.bankrate.com/press-releases/fewer-americans-have-a-side-hustle-in-2025/)). LendingTree's March 2026 survey reports a higher average of $1,242 but no median. It also shows 56% of side hustlers work 5–15 hours a week, the same budget as this plan ([LendingTree](https://www.lendingtree.com/debt-consolidation/side-hustle-income-survey/)). The gap between average and median is the main lesson: a few large earners pull the average up and most people earn little.\n\nAI tooling does not change that distribution. A September 2026 census of all 10,150 products listed on TrustMRR found **49.3% of AI products earning versus 49.0% of non-AI products, and 3.8% versus 3.9% at $5,000+ MRR**. Overall, 26.1% had never earned, the median earner took in $169 in 30 days, and the top 1% of products captured 76.1% of all revenue ([TechStartups](https://techstartups.com/2026/09/28/what-percentage-of-indie-hacker-products-make-100k-in-arr/)). Age matters more than technology. Among products under three months old, 44% had never earned and about 1% were at $5,000 MRR. Among products over four years old, 19% had reached $5,000 MRR, although those are survivors. Subscription apps tell the same story. RevenueCat's data on 115,000+ apps shows **17.3% of new apps reach $1,000 a month within two years, and the median app earns about $72 a month a year after launch** ([RevenueCat](https://www.revenuecat.com/state-of-subscription-apps/)). On Gumroad, the median seller has earned about $90 lifetime and the median paid price is $7 ([Profitable.app](https://profitable.app/gumroad/stats)). In 2023 data, only 35% of newsletters published a second issue ([Reletter](https://reletter.com/blog/newsletter-fade/)).\n\nThe research keeps finding the same reason: AI compresses build time, not the time it takes to find buyers. One non-coder shipped three SaaS products in weeks on Claude Max and disclosed no revenue for any of them ([dev.to](https://dev.to/rikuq/claude-code-review-2026-from-zero-code-to-3-live-saas-203k)). A Claude Code and n8n \"agency\" built 25 templates, two MCP servers and 17 skills and had **$0 revenue and zero clients** when it posted about them ([dev.to](https://dev.to/krisying/how-im-building-a-one-person-ai-automation-agency-in-2026-tools-stack-revenue-3712)). Pieter Levels counts only 4 of his 70+ projects as having made money and grown ([dev.to](https://dev.to/idonthaveapen/failures-behind-a-420kmonth-solo-founder-i-read-all-751-of-pieter-levels-blog-posts-1h3b)). In the census, founders with 4+ products reached $5,000 MRR 14.1% of the time versus 5.0% with one product. That correlation supports making several bets. Pat Walls reported the opposite lesson: Starter Story's revenue tripled once he stopped splitting effort across about ten projects (secondary source) ([Indie Hackers](https://www.indiehackers.com/post/im-pat-walls-i-built-my-side-project-starterstory-to-profitability-and-quit-my-full-time-engineering-job-441d4cd5fe/)). The plan resolves this by sequencing: it runs ten stages over two years but never builds more than two at once.\n\n## Three stages pay within weeks; everything else pays in months\n\n### Training gigs pay $14–$45 an hour, in floods and droughts\n\nAI-lab training work is the fastest route to a first dollar at no cost. It is also the least stable. Listed coding rates are high: Outlier $27.50–$50, Mercor's engineering median $80.25, micro1 $75, and Handshake AI's median $80 across 246 listings ([aitrainer.work](https://aitrainer.work/guides/best-ai-training-platforms-developers-coders); [aitrainer.work](https://aitrainer.work/guides/handshake-ai-fellowship-guide)). Independent reports put **DataAnnotation at $14–$20 for general work and $25–$45 for coding**. The same reports describe 1–3 weeks to a first task, floods of work followed by weeks near zero, and deactivations without a clear appeal ([Talents for AI](https://talentsforai.com/blog/is-dataannotation-tech-legit/)). Pay can be cut quickly. Mercor moved a Meta project's workers from $21 to $16 an hour in November 2025 ([Futurism](https://futurism.com/artificial-intelligence/mercor-meta-ai-labor)). Outlier contractors reported repricing of 30–50% in 2026 ([aitrainer.work](https://aitrainer.work/news/scale-ai-fallout-surge-ai-hyper-growth)). A pending suit alleges 30,000+ Mercor workers were misclassified as contractors; these are allegations, not findings ([Law360](https://www.law360.com/tax-authority/articles/2475907)). Handshake requires workers to be 18+, US-based and to have an SSN or ITIN. Many of its listings ask for a degree, so a current undergraduate's access depends on the listing. The research team's planning model, which is not a measured median, is about $750 a month gross at 25 paid hours and $30 an hour, with drought months at $0–$250. Gigs leave cash and a working knowledge of where models fail. Platform confidentiality rules may limit how much of that knowledge can be shared publicly, so the plan keeps a private failure log and retires gigs at month 5.\n\n### Claude Code freelancing rides 109% growth in AI demand on a shrinking platform\n\nUpwork's 2026 skills report found **demand for AI skills grew 109% in 2025 versus 23% for other skills, with AI integration up 178% and chatbot development up 71%** ([Upwork](https://www.upwork.com/press/releases/upworks-in-demand-skills-2026-demand-for-top-ai-skills-more-than-doubles-as-ai-is-embedded-into-everyday-work)). The platform as a whole is shrinking. Q3 2026 gross services volume fell 10.1% to $914.1M and active clients fell to 717,000, while volume from freelancers with AI skills rose 55% ([Upwork Q3 2026](https://www.sec.gov/Archives/edgar/data/0001627475/000162747526000053/upwork3q26-pressrelease_3q.htm)). Fiverr's marketplace revenue fell 24.7% in the same quarter, and its management expects traffic to keep falling as AI-driven discovery replaces search ([Fiverr Q3 2026](https://www.sec.gov/Archives/edgar/data/0001762301/000117891326004897/exhibit_99-1.htm)). Commodity AI work is losing value. Generative creative contract starts rose 90% while per-contract earnings fell 13%, but freelancers doing complex AI work earned 45% more year over year ([Upwork Future Workforce Index via QuiverQuant](https://www.quiverquant.com/news/Upwork+Releases+2026+Future+Workforce+Index%2C+Finding+AI+Is+Reshaping+Freelance+Work+and+Earnings)). The conclusion is to sell integrations and dashboards, not generated content.\n\nGetting work is a numbers game. GigRadar's analysis of 133,872 proposals found **reply rates of 5.80% in web development and 7.21% in AI/ML**. Replies peaked at 8.99% for proposals sent four to five minutes after a job was posted and at 8.8% for bids within 5% of the client's budget ([GigRadar](https://gigradar.io/blog/upwork-market-report-2026)). Blogs and forums put the first client at 2–8 weeks and 15–80 proposals ([GigUp](https://giguphq.com/blog/how-long-does-it-take-to-get-your-first-upwork-client)). Upwork's fee has been variable at 0–15% (typically about 10%) since May 2025, and each proposal costs $0.60–$2.40 in Connects ([jobalerts.dev](https://jobalerts.dev/blog/upwork-fees)). Contra charges freelancers nothing and bills the client $19 per contract ([Contra](https://contra.com/commission-free)). A live expert-level Upwork automation post paid $30–$60 an hour ([Upwork](https://www.upwork.com/jobs/~022064749685465370305)). Fixed prices let Claude Code's speed turn into a higher effective hourly rate.\n\n### Local retainers turn one demo into recurring revenue\n\nMissed-call text-back and automated review requests are concrete, demo-able outcomes for dentists, contractors and salons. **Most such services sell for $99–$300 a month**, and SMS requires A2P registration (about $19.50 once plus $1.50–$3 a month) ([Quo](https://www.quo.com/blog/missed-call-text-back-software/)). The appeal is retention. Focus Digital's 2026 study measured retainer clients churning **2.47% a month, an average lifespan of about 40 months, versus 6.69% for project clients** ([Focus Digital](https://focus-digital.co/average-marketing-agency-churn/)). Demand is broad: 58% of small businesses used generative AI in 2025, up from 23% in 2023 ([IPWatchdog on the U.S. Chamber report](https://ipwatchdog.com/2025/08/18/us-chamber-report-small-businesses-rapidly-adopting-ai-despite-regulatory-concerns/)). The most detailed agency case is self-reported, comes from a site that sells courses, and is internally inconsistent. In it, the first client signed at month 3 for $500 plus $150 a month. Cold email to 40 local businesses got one reply, five of seven clients came from client 1's referrals, and the founder worked 60+ hours a week early on ([BeginnersinAI](https://beginnersinai.org/ai-agency-success-story/)). That is four to five times this operator's budget, which is why the plan's numbers sit far below that story. Cold email to local services averages about a 3.4% reply rate ([Mailshake](https://mailshake.com/blog/cold-email-benchmarks-2026/)). The plan therefore relies on in-person demos and referrals. Focus Digital's data has a warning: 60% of small businesses that leave cite lack of ROI, so each retainer needs a before-and-after number.\n\n### Audience stages earn little directly but raise every later stage\n\nNewsletters have the shortest documented path to first revenue: **a median of 66 days to the first dollar** for beehiiv newsletters launched in 2025 ([beehiiv](https://www.beehiiv.com/blog/the-state-of-newsletters-2026)). Paid tiers are weak. The median free-to-paid conversion is 0.62%, about $62 a month per 1,000 subscribers at $10. The AI niche churns 13.33% a month, which works out to an average paid lifetime of roughly 7.5 months ([beehiiv](https://www.beehiiv.com/blog/the-state-of-paid-newsletters-2026)). Sponsorship on small lists sells at about $15–$35 CPM. The beehiiv Ad Network needs 2,500 subscribers ([beehiiv](https://www.beehiiv.com/blog/newsletter-sponsorship-cost)). The median list grows 3.5% a month ([Newsletter Benchmarks](https://newsletterbenchmark.com/)). The list's real job is distribution for every later launch, and beehiiv is free up to 2,500 subscribers.\n\nA free niche tool is the one search play that still works. Search for articles is in decline. Pages with an AI Overview get **58% fewer clicks at position 1** ([Ahrefs](https://ahrefs.com/blog/ai-overviews-reduce-clicks-update/)), and 68% of US Google searches ended without a click in early 2026 ([SparkToro](https://sparktoro.com/blog/in-2026-less-than-one-third-of-google-searches-still-send-a-click/)). Calculators and converters are much harder for AI to summarize away. Ahrefs documents low-difficulty openings such as \"etsy fee calculator\" (keyword difficulty 7) and also warns the edge will narrow as tools get trivially easy to build ([Ahrefs](https://ahrefs.com/blog/the-free-tools-seo-strategy/)). Users are not revenue. The median Chrome extension has 18 users, 70.4% have 100 or fewer ([Konabayev](https://konabayev.com/blog/extension-monetization-statistics-2026/)), and one extension with 40,000 daily users showed $0 revenue (search summary only) ([TrustMRR](https://trustmrr.com/startup/60-000-weekly-users-40-000-daily-users-chrome-extension-3-years-old-no-maintenance)).\n\nAffiliate links take almost no extra hours. Recurring SaaS programs pay far better than retail ones. **Beehiiv and Kit pay 50% of referred revenue for 12 months, HubSpot pays 30% for a year with a 180-day cookie, and ElevenLabs pays 22%** ([beehiiv](https://academy.beehiiv.com/p/partner-program); [Kit](https://kit.com/affiliate); [HubSpot](https://www.hubspot.com/partners/affiliates); [ElevenLabs](https://elevenlabs.io/affiliate)). Notion is not accepting new affiliates ([Notion](https://www.notion.com/affiliates)). The conservative conversion figure is 0.8% of referrals becoming sales over 90 days ([Rewardful](https://www.rewardful.com/articles/state-of-saas-affiliate-programs-report)). Warm email traffic does better, which is why this stage comes after the list exists.\n\n### Product stages have long tails and small medians\n\nTemplate packs only work in narrow niches. The median paid Notion template on Gumroad has earned **about $520 lifetime, and 49% earned under $500** ([InsightRaider](https://insightraider.com/en/answers/how-much-can-you-make-selling-notion-templates-on-gumroad)). Profession-specific templates face little competition: top therapist templates show 8–45 reviews against 1,000+ for generic ones, at $25–$79 (vendor scan) ([Kupkaike](https://kupkaike.com/blog/is-selling-notion-templates-still-profitable-2026)). On October 22, 2026, Etsy banned standalone AI prompt bundles and AI-written instructions and began requiring an unedited real photo on listings ([GreenOnion](https://greenonion.ai/blog/etsy-copyright-ai-images); [Digital Commerce 360](https://www.digitalcommerce360.com/2026/10/26/etsy-ai-policy/)). One correction to the shipped plan: it names Lemon Squeezy (5% + 50¢) as a storefront, but Lemon Squeezy's own team says it is migrating users to Stripe Managed Payments and admits to slower support ([Lemon Squeezy](https://www.lemonsqueezy.com/blog/2026-update)). Payhip's free plan (5% plus processor fees, with US sales tax handled) is the safer default ([Payhip](https://payhip.com/pricing)).\n\nA vertical micro-SaaS has the highest ceiling, and category choice matters. In the census, **Productivity and Utilities products reached $5,000 MRR only 0.6% and 0.5% of the time, against 8.0% for mobile, 6.0% for e-commerce and 4.9% for marketing**. Products above $5,000 MRR charged a $37 median subscription versus $13 overall ([TechStartups](https://techstartups.com/2026/09/28/what-percentage-of-indie-hacker-products-make-100k-in-arr/)). Running costs are low. Vercel Pro ($20) plus Supabase's free tier covers launch, and a paid product cannot use Vercel's non-commercial Hobby plan ([Vercel](https://vercel.com/pricing); [Supabase](https://supabase.com/pricing)). The real cost risk is model usage. Sonnet 5.5 costs $2/$10 per million input/output tokens and Haiku 5.5 costs $0.10/$0.50 ([Anthropic](https://platform.claude.com/docs/en/about-claude/pricing)). A billing vendor's model shows flat \"unlimited\" plans losing money on power users, and 3–5x markups with usage caps holding 70–85% margins ([Dodo Payments](https://dodopayments.com/blogs/ai-wrapper-business-model-monetization/)).\n\nCourses and exits come last because their evidence is the thinnest. Claude Club charges $97 a month and had 526 members on October 31, 2026, down from 546 in August ([AI Funnel Insider](https://aifunnelinsider.com/claude-club-skool-review-2026/)). Profitable.app models Skool communities under 100 members at about $450–$500 a month, as an upper bound ([Profitable.app](https://profitable.app/skool/stats)). Justin Welsh's first course made $10,482 in its first month. He launched it at 20,000+ followers, after consulting had already earned him $880K (self-reported) ([Welsh thread](https://threadreaderapp.com/thread/1453029782631895043.html)). No independent income data exists for Claude Code educators. On exits, small SaaS listings ask a median 2.0x revenue or 3.4x profit. That comes from one secondary source whose page could not be opened ([BigIdeasDB](https://bigideasdb.com/state-of-saas-valuations-2026)). At those multiples, a product at $1,000 MRR is worth roughly $24,000–$39,000. Tony Dinh sold Xnapper at about $4,000 MRR for $150K, and sold Black Magic at $14,000 MRR for only $128K after Twitter repriced its API ([Supabird](https://supabird.io/articles/tony-dinh-from-a-105k-developer-to-a-1-million-indie-hacking-marvel)).\n\n## Seven popular AI hustles fail the screen\n\nSeveral heavily marketed AI hustles fail on the platform's own rules or on measured payout data. They are left out of the plan.\n\n| Hustle | Deciding fact | Verdict |\n|---|---|---|\n| Faceless YouTube | From Feb 1, 2027 new channels need 8,000 watch hours or 20M Shorts views ([YouTube](https://support.google.com/youtube/answer/12843009)); median RPM $2.30 ([AIR](https://air.io/en/air-data-findings/which-youtube-niche-makes-the-most-money-in-2026-ranked-by-real-rpm-and-cpm)) | Out |\n| TikTok/Reels payouts | 10K followers to join; 76% of creators average under 1K views a post ([DIW](https://www.digitalinformationworld.com/2026/03/creator-economy-report-515-of-creators.html)) | Funnel only |\n| AI stock images/music | Shutterstock and Pond5 ban contributor AI ([Shutterstock](https://submit.shutterstock.com/help/en/articles/10594622-content-policy-updates-ai-generated-content); [Pond5](https://contributor.pond5.com/getting-started/legal-guidelines/)) | Closed |\n| Paid MCP servers/skills | Vendor estimate: median server earns $0, under 5% earn anything ([DEV](https://dev.to/nicolas_fainstein/the-state-of-mcp-monetization-in-2026-28i4)) | Lead magnet only |\n| GitHub bounties | 64.1% of bounty-labeled issues paid $0; a 40-hour test earned $0 ([DEV](https://dev.to/zeroknowledge0x/i-analyzed-1000-github-bounty-issues-heres-what-actually-pays-and-whats-a-waste-of-time-geb)) | Portfolio only |\n| Print-on-demand | $3–$8 net per shirt; 124–274 shirts a month for $1K profit ([Printful](https://www.printful.com/blog/how-much-money-can-custom-t-shirts-make)) | Out |\n| Podcasts | Median episode gets 27–28 first-week downloads ([Buzzsprout](https://www.buzzsprout.com/stats)) | Out |\n\nYouTube's July 2025 \"inauthentic content\" rule explicitly demonetizes templated, mass-produced AI output ([YouTube](https://support.google.com/youtube/answer/1311392)). Faceless channels are therefore both slow and at policy risk. X ended Creator Revenue Sharing in September 2026, and LinkedIn has no payout program. Both are useful for reaching people, not for revenue ([OpenTweet](https://opentweet.io/blog/x-original-content-rewards-2026)). ElevenLabs voice licensing has paid $22M+ across 10,400+ creators ([ElevenLabs](https://elevenlabs.io/blog/22-million-earned-by-voice-creators-on-elevenlabs)). That works out to about $2,115 cumulative per earning creator, skewed by top voices, and licensing exposes your voice to synthetic reuse that cannot be undone. It is a small optional side bet, not a stage.\n\n## The ten-stage cascade turns $92 of setup into a $3,000-a-month base case by month 24\n\nThe order follows the documented sequence of operators who succeeded: services first, then audience, then products. Daniel Vassallo freelanced about 20 hours a month as an income floor before his ebook made about $40K in two weeks ([Vassallo thread](https://threadreaderapp.com/thread/1495838991752384513.html)). Of Justin Welsh's first $1.3M, $880K came from consulting, and the audience he built to win consulting work later became the market for his course ([Welsh thread](https://threadreaderapp.com/thread/1453029782631895043.html)). Rob Walling's stair-step method reaches SaaS only after smaller products fund it ([MicroConf](https://microconf.com/latest/the-stairstep-approach-to-bootstrapping)). The shipped plan applies this to ten stages. Each stage hands the next cash, code, a niche, a list or proof. Start dates are plan months, where month 0 is November 2026.\n\n| Stage (start month) | Base 24-mo revenue | Main output | Feeds |\n|---|---|---|---|\n| 1 AI gigs (0, ends 5) | $1,000 | Cash, failure log | 2, 3 |\n| 2 Freelance builds (0) | $8,900 | Code, niche, reviews | 3, 4, 5, 8 |\n| 3 Newsletter (1) | $3,400 | Owned list | 5, 7, 8, 9 |\n| 4 Local retainers (2) | $10,700 | Recurring revenue, SaaS spec | 3, 5, 8 |\n| 5 Template packs (5) | $2,500 | Buyers, course modules | 3, 9 |\n| 6 Free niche tool (6) | $500 | Signups, search traffic | 3, 7, 8 |\n| 7 Affiliate links (7) | $800 | Commissions | — |\n| 8 Vertical micro-SaaS (8) | $4,600 | A sellable asset | 3, 9, 10 |\n| 9 Cohort course (14) | $1,700 | Referrals | 2, 7 |\n| 10 Reinvest and exit (18) | $0 | Capital | 8 |\n\nThese figures come from running the plan's own data through the dashboard's forecast engine. For each stage, the engine interpolates low, base and high monthly revenue anchors at months 3, 6 and 12 and applies a month-24 growth factor. Each mature upstream stage adds a \"feed\" boost, capped at 1.75x, and revenue is throttled if the plan ever needs more than the 12-hour weekly budget. Tool costs are subtracted. Taxes are not, and revenue is meant to be stated net of platform fees.\n\n| Scenario | Year 1 | Year 2 | Month-24 rate |\n|---|---|---|---|\n| Low | $1,450 | $6,030 | $630/mo |\n| Base | $7,210 | $27,000 | $2,980/mo |\n| High | $21,640 | $93,920 | $10,860/mo |\n\nFive features of the forecast matter more than the totals. First, the plan fits the time budget: demand peaks at exactly 12 hours a week and never exceeds it, because stage 1 retires as stages 5–8 start. Raising the budget to 15 hours changes nothing; the extra hours are slack. Second, the money requirement is trivial. Setup costs total $92 across all stages, tool costs run $682 in year one and $840 in year two, and cumulative net turns positive in month 1 in the base case and month 3 in the low case. Third, **the waterfall itself adds about $5,300, or 18%, to the base 24-month total**: the same stages with no feeds would earn $28,900. Almost all of that premium lands in year two, when the list and the client niche have matured. Fourth, services carry the plan. Freelancing and retainers alone produce $19,600 of the $34,200, and the retainer stage is the single largest line, so whether retainers sign by month 5 is the leading indicator for the whole forecast. Fifth, effort pays badly at first. At 12 hours a week, about 624 hours a year, base year one returns roughly $11.50 an hour and year two about $43. Pure gig work at the research team's $30 effective rate would beat year one in cash. The plan deliberately trades year-one income for assets the operator owns.\n\nThose assets explain why the base case can reach about $3,000 a month by month 24, but the base case is not the typical outcome. Its month-12 run rate of about $1,200 a month would place the operator among the 14% of side hustlers who clear $1,000 ([Bankrate](https://www.bankrate.com/press-releases/fewer-americans-have-a-side-hustle-in-2025/)). The low case's $280 a month at month 12 sits near the national median. Several growth factors also assume compounding that the evidence does not guarantee: the newsletter, affiliate and exit stages each double between months 12 and 24. Budget around the low case and treat the base case as the target. The plan's kill rules are the safeguard. Examples include fewer than two paid projects after 60 proposals, zero retainers after 40 real conversations, under $300 MRR six months after the SaaS launches, and a full restart in a new niche if no stage clears $500 a month by month 12. Write those rules down before each stage starts and enforce them.\n\n## Pennsylvania rules, taxes and failure modes cost little to respect and a lot to ignore\n\nThe tool stack fits inside the budget. Claude Pro is $20 a month ($17 billed annually) and includes Claude Code. Max ($100) and Ultra ($200) raise the usage limits, but their bundled API credits cannot be used inside Claude Code ([Claude pricing](https://claude.com/pricing); [Claude support](https://support.claude.com/en/articles/11145838-using-claude-code-with-your-pro-or-max-plan)). A .com domain costs $11.81 a year ([Porkbun](https://porkbun.com/products/domains)). The lean stack runs about $21 a month, and $500 of starting capital covers a year of it with room left over.\n\nTaxes start sooner than most students expect. Self-employment tax is **15.3% once net earnings reach $400** ([IRS](https://www.irs.gov/businesses/small-businesses-self-employed/self-employment-tax-social-security-and-medicare-taxes)). For 2026, platforms issue a 1099-NEC only at $2,000 and a 1099-K only above $20,000 and 200 transactions, but all income is reportable whether or not a form arrives ([IRS 1099-K](https://www.irs.gov/businesses/understanding-your-form-1099-k); [IRS 1099-NEC instructions](https://www.irs.gov/instructions/i1099mec)). Quarterly estimates apply once you expect to owe $1,000 or more ([IRS](https://www.irs.gov/businesses/small-businesses-self-employed/estimated-taxes)). Pennsylvania adds 3.07% personal income tax ([PA Revenue](https://www.pa.gov/agencies/revenue/resources/tax-rates)). Local earned-income tax was not researched. Under third-party guides, SaaS is subject to Pennsylvania's 6% sales tax while most services are exempt, which matters when stage 8 launches ([Anrok](https://anrok.com/saas-sales-tax-by-state/pennsylvania)). A Pennsylvania LLC costs $125 plus a $7 annual report, and an EIN is free ([PA DOS](https://www.pa.gov/en/agencies/dos/programs/business/fees-and-payments.html); [IRS](https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number)). Nothing requires an LLC to start, so forming one once revenue is real is reasonable. The plan's 25–30% set-aside turns base year one's $6,500 net of tools into about $4,600–$4,900 you can spend.\n\nLegal exposure is mostly about honesty and disclosure. Anthropic's consumer terms require users to be 18+, assign outputs to the user, and prohibit reselling the service or sharing accounts ([Consumer Terms](https://www.anthropic.com/legal/consumer-terms)). Its usage policy requires consumer-facing chatbots to disclose that the user is talking to AI. That applies directly to any retainer bot that texts a dentist's patients. The policy also bans fake reviews and manipulating search results ([Anthropic AUP](https://www.anthropic.com/legal/aup)). The FTC's rule makes AI-generated fake reviews a civil-penalty violation ([FTC](https://www.ftc.gov/news-events/news/press-releases/2024/08/federal-trade-commission-announces-final-rule-banning-fake-reviews-testimonials)), and affiliate links need a plain label such as \"Paid link\" next to the recommendation ([FTC](https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking)). Copyright protection for AI output is thin. The D.C. Circuit held that copyright requires a human author, and the Supreme Court declined review on March 2, 2026 ([D.C. Circuit](https://media.cadc.uscourts.gov/opinions/docs/2025/03/23-5233.pdf); [SCOTUSblog](https://www.scotusblog.com/cases/case-files/thaler-v-perlmutter)). The Copyright Office says prompts alone do not make someone the author ([USCO](https://www.copyright.gov/ai/Copyright-and-Artificial-Intelligence-Part-2-Copyrightability-Report.pdf)). Template packs and generated code are protected only in their human-made selection, arrangement and edits. The defensible advantages are the niche, the list and speed, not copyright.\n\nThe documented ways this goes wrong are mostly avoidable. Anthropic's entry API tier caps spend at $500 a month; set your own lower limit and never put an API key in client-side code ([Anthropic](https://platform.claude.com/docs/en/api/rate-limits)). Stripe charges $15 per dispute, and Visa's monitoring program flags merchants at as few as 5 disputes and a 0.5% dispute ratio. Clear billing terms and easy cancellation on the SaaS are the main defense ([Stripe](https://stripe.com/pricing); [Stripe docs](https://docs.stripe.com/disputes/monitoring-programs)). Platform dependence is the risk every stage shares: gig repricing, Etsy's October rule changes, Lemon Squeezy's migration, and Black Magic's forced sale all show it. Keeping the email list and the code under your own control is the hedge built into the plan.\n\n## Conclusion\n\nThe research changes what the cascade is. It is not ten side hustles in parallel. It is a small services business, gigs then freelancing then retainers, whose by-products are converted step by step into assets: reusable code becomes templates, the questions clients repeat pick the SaaS, and the record of shipping becomes a newsletter. The evidence shows AI makes the building nearly free but does nothing for distribution, so the stages that create distribution (the list, referrals, an installed client base) matter more than any product idea. The honest comparison for year one is steady gig income, which the cascade does not beat. The cascade earns its place in year two, in a SaaS worth an estimated $24,000–$39,000 if it reaches $1,000 MRR, and in a list that carries forward into the next attempt.\n\nTwo signals tell an operator early which scenario they are in: signed retainers by month 5 and about 300 subscribers by month 8. Hitting both makes the base case credible. Missing both means the low case, about $7,500 over two years, which is still more than the median side hustler earns and comes with code and a list kept. The biggest open uncertainties are outside the operator's control. Upwork and Fiverr are shrinking even as AI work grows, training-gig pay is being cut, and none of the self-reported $20K+ MRR Claude Code stories has been independently verified. Plan around the median and treat any upside as a bonus.\n"
+ },
+ "meta": {
+  "version": "1.1",
+  "updated": "2026-11-07",
+  "provisional": false,
+  "note": "Research-backed data block; see docs/DATA_CONTRACT.md."
+ },
+ "categories": {
+  "cash": {
+   "label": "Cash floor",
+   "hex": "#3987e5"
+  },
+  "service": {
+   "label": "Services",
+   "hex": "#d95926"
+  },
+  "product": {
+   "label": "Products",
+   "hex": "#199e70"
+  },
+  "audience": {
+   "label": "Audience",
+   "hex": "#c98500"
+  },
+  "software": {
+   "label": "Software",
+   "hex": "#d55181"
+  }
+ }
+};
+/*DATA-END*/
+</script>
+
+<script>
+(function(){
+'use strict';
+const DATA = window.CASCADE_DATA;
+const STAGES = DATA.stages;
+const CATS = DATA.categories;
+const BY_ID = Object.fromEntries(STAGES.map(s => [s.id, s]));
+const SCEN = [{k:'lo',label:'Low',long:'Conservative'},{k:'base',label:'Base',long:'Base case'},{k:'hi',label:'High',long:'Aggressive'}];
+const STATUS = {idle:'Idle', building:'Building', live:'Live', paused:'Paused', killed:'Killed'};
+const provNote = () => DATA.meta.provisional ? `<div class="notice warn small" style="margin-bottom:12px"><b>Placeholder numbers.</b> These dollar figures are rough estimates until the research is merged. Do not plan around them yet.</div>` : '';
+
+/* ---------------- utils ---------------- */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36);
+const pad = n => String(n).padStart(2,'0');
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const parseISO = s => { const [y,m,d] = String(s).split('-').map(Number); return new Date(y, (m||1)-1, d||1); };
+const monthIdx = (iso, startIso) => { const a = parseISO(startIso), b = parseISO(iso); return (b.getFullYear()-a.getFullYear())*12 + (b.getMonth()-a.getMonth()); };
+const monthDate = (startIso, i) => { const a = parseISO(startIso); return new Date(a.getFullYear(), a.getMonth()+i, 1); };
+const monthLabel = (startIso, i, long) => monthDate(startIso, i).toLocaleString('en-US', long ? {month:'long', year:'numeric'} : {month:'short'});
+const monthShort = (startIso, i) => { const d = monthDate(startIso, i); return d.toLocaleString('en-US',{month:'short'}) + (d.getMonth()===0 || i===0 ? ` ’${String(d.getFullYear()).slice(2)}` : ''); };
+const fmtMoney = (n, opt={}) => {
+  const neg = n < 0; const a = Math.abs(n);
+  let s;
+  if (a >= 1e6) s = '$' + (a/1e6).toFixed(a >= 1e7 ? 0 : 1) + 'M';
+  else if (a >= 1e4) s = '$' + (a/1e3).toFixed(a >= 1e5 ? 0 : 1) + 'K';
+  else if (opt.cents) s = '$' + a.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  else s = '$' + Math.round(a).toLocaleString('en-US');
+  return (neg ? '−' : (opt.sign && n > 0 ? '+' : '')) + s;
+};
+const fmtAxis = n => { const a = Math.abs(n); const s = a >= 1000 ? (a/1000).toFixed(a % 1000 === 0 ? 0 : 1).replace(/\.0$/,'') + 'K' : String(Math.round(a)); return (n<0?'−':'') + '$' + s; };
+const fmtInt = n => Math.round(n).toLocaleString('en-US');
+const catColor = c => (CATS[c] && CATS[c].hex) || '#7d88a6';
+const svgNS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs={}, kids=[]) => { const e = document.createElementNS(svgNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); kids.forEach(k => e.appendChild(k)); return e; };
+const txt = (x, y, s, attrs={}) => { const t = el('text', Object.assign({x, y}, attrs)); t.textContent = s; return t; };
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+
+/* ---------------- state ---------------- */
+const KEY = 'cascade.state.v1';
+const firstOfMonth = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-01`; };
+const DEFAULT = () => ({ v:1, createdAt: todayISO(), settings:{ hoursPerWeek:12, scenario:1, horizon:12, startDate:firstOfMonth(), tipDismissed:false }, stages:{}, ledger:[] });
+let S;
+function normalize(){
+  const d = DEFAULT(); const st0 = (S.settings && typeof S.settings === 'object') ? S.settings : {}; S.settings = Object.assign({}, d.settings, st0);
+  const num = (v, def) => Number.isFinite(+v) && v !== '' && v !== null ? +v : def;
+  S.settings.hoursPerWeek = clamp(Math.round(num(S.settings.hoursPerWeek, d.settings.hoursPerWeek)), 2, 60);
+  S.settings.scenario = clamp(Math.round(num(S.settings.scenario, 1)), 0, 2);
+  S.settings.horizon = +S.settings.horizon === 24 ? 24 : 12;
+  if (typeof S.settings.startDate !== 'string' || !/^\d{4}-\d{2}(-\d{2})?$/.test(S.settings.startDate)) S.settings.startDate = d.settings.startDate;
+  if (S.settings.startDate.length === 7) S.settings.startDate += '-01';
+  S.settings.tipDismissed = !!S.settings.tipDismissed;
+  S.stages = (S.stages && typeof S.stages === 'object') ? S.stages : {};
+  Object.keys(S.stages).forEach(k => { const r = S.stages[k]; if (!BY_ID[k] || !r || typeof r !== 'object') { delete S.stages[k]; return; }
+    if (!Object.prototype.hasOwnProperty.call(STATUS, r.status)) r.status = 'idle';
+    r.checks = (r.checks && typeof r.checks === 'object') ? r.checks : {}; r.kpis = (r.kpis && typeof r.kpis === 'object') ? r.kpis : {};
+    Object.keys(r.kpis).forEach(kk => { if (r.kpis[kk] !== '' && !Number.isFinite(+r.kpis[kk])) delete r.kpis[kk]; });
+    r.notes = typeof r.notes === 'string' ? r.notes : '';
+    r.startMonth = r.startMonth == null ? null : num(r.startMonth, null); r.sunsetMonth = r.sunsetMonth == null ? null : num(r.sunsetMonth, null);
+    if (r.startedAt != null && !(typeof r.startedAt === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.startedAt))) r.startedAt = null; });
+  S.ledger = (Array.isArray(S.ledger) ? S.ledger : []).filter(e => e && typeof e === 'object' && typeof e.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && Number.isFinite(+e.amount) && +e.amount >= 0 && (e.type === 'income' || e.type === 'expense'))
+    .map(e => ({ id: String(e.id || uid()), ts: +e.ts || 0, type: e.type, amount: +e.amount, stage: BY_ID[e.stage] ? e.stage : null, date: e.date, note: typeof e.note === 'string' ? e.note.slice(0, 200) : '' }));
+}
+function load(){
+  try { const raw = localStorage.getItem(KEY); S = raw ? JSON.parse(raw) : DEFAULT(); } catch(e){ S = DEFAULT(); }
+  normalize();
+}
+const save = debounce(() => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){ toast('Could not save (storage blocked)'); } }, 150);
+const saveNow = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
+const st = id => (S.stages[id] = S.stages[id] || { status:'idle', checks:{}, kpis:{}, notes:'', startedAt:null, startMonth:null, sunsetMonth:null });
+const nowMonth = () => monthIdx(todayISO(), S.settings.startDate);
+const curMonth = () => Math.max(0, nowMonth());
+const monLY = i => monthDate(S.settings.startDate, i).toLocaleString('en-US', {month:'short', year:'numeric'});
+const scenario = () => clamp(S.settings.scenario|0, 0, 2);
+
+/* ---------------- ledger helpers ---------------- */
+const income = e => e.type === 'income';
+function ledgerTotals(filter){
+  let inc = 0, exp = 0; S.ledger.forEach(e => { if (filter && !filter(e)) return; if (income(e)) inc += +e.amount || 0; else exp += +e.amount || 0; }); return {inc, exp, net: inc - exp};
+}
+function actualsByMonth(){
+  const map = {}; S.ledger.forEach(e => { const m = monthIdx(e.date, S.settings.startDate); const r = (map[m] = map[m] || {inc:0, exp:0}); if (income(e)) r.inc += +e.amount || 0; else r.exp += +e.amount || 0; }); return map;
+}
+function stageEarning(id){ // income in the last 45 days
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 45);
+  return S.ledger.some(e => e.stage === id && income(e) && parseISO(e.date) >= cutoff);
+}
+
+/* ---------------- forecast engine ---------------- */
+function schedule(stage){
+  const r = st(stage.id); const s = S.settings;
+  const killed = r.status === 'killed';
+  let start = r.startMonth != null ? r.startMonth : stage.plan.start;
+  if (r.startedAt && (r.status === 'live' || r.status === 'building' || r.status === 'paused')) start = Math.max(0, monthIdx(r.startedAt, s.startDate));
+  let end = r.sunsetMonth != null ? r.sunsetMonth : (stage.plan.sunset == null ? Infinity : stage.plan.sunset);
+  if (r.status === 'paused') end = Math.min(end, curMonth());
+  return { start, end, killed };
+}
+function rawRev(stage, t, sc){
+  if (t < 0) return 0;
+  const r = stage.rev; const k = SCEN[sc].k === 'lo' ? 0 : SCEN[sc].k === 'hi' ? 2 : 1;
+  const ttfdM = clamp(((stage.ttfd[0] + stage.ttfd[1]) / 2) / 4.33, 0.25, 2.9);
+  const pts = [[0,0],[ttfdM, Math.min(r.m3[k], r.m6[k]) * 0.15],[3, r.m3[k]],[6, r.m6[k]],[12, r.m12[k]],[24, r.m12[k] * (stage.growth24 == null ? 1.15 : stage.growth24)]];
+  for (let i = 1; i < pts.length; i++) if (pts[i][0] <= pts[i-1][0]) pts[i][0] = pts[i-1][0] + 0.01;
+  if (t >= 24) return pts[5][1];
+  for (let i = 1; i < pts.length; i++) { if (t <= pts[i][0]) { const [t0,v0] = pts[i-1], [t1,v1] = pts[i]; return v0 + (v1 - v0) * ((t - t0) / (t1 - t0)); } }
+  return pts[pts.length-1][1];
+}
+function forecast(sc, H){
+  const budget = S.settings.hoursPerWeek;
+  const sch = {}; STAGES.forEach(x => sch[x.id] = schedule(x));
+  const months = []; const totals = {}; STAGES.forEach(x => totals[x.id] = 0);
+  for (let m = 0; m < H; m++){
+    const active = []; let demand = 0;
+    STAGES.forEach(x => { const q = sch[x.id]; if (q.killed) return; const t = m - q.start; if (t < 0 || m >= q.end) return; const hrs = t < x.ramp ? x.hours.build : (t < 12 ? x.hours.run : x.hours.maint); demand += hrs; active.push({x, t, hrs}); });
+    const throttle = demand > budget ? budget / demand : 1;
+    const byStage = {}, byCat = {}, boosts = {}; let total = 0, cost = 0;
+    active.forEach(({x, t}) => {
+      let boost = 0;
+      STAGES.forEach(f => { if (f.id === x.id) return; const q = sch[f.id]; if (q.killed) return; const tf = m - q.start; if (tf < 0) return;
+        (f.feeds || []).forEach(e => { if (e.to !== x.id) return; const ran = Math.min(m, q.end) - q.start; const matured = ran >= Math.max(1, Math.round(f.ttfd[1] / 4.33)); const alive = m < q.end || e.persist; if (matured && alive) boost += (e.boost == null ? 0.1 : e.boost); }); });
+      const mult = Math.min(1 + boost, 1.75);
+      const v = rawRev(x, t, sc) * mult * throttle;
+      byStage[x.id] = v; boosts[x.id] = mult; byCat[x.cat] = (byCat[x.cat] || 0) + v; total += v; totals[x.id] += v;
+      cost += (x.monthly || 0) + (t === 0 ? (x.setup || 0) : 0);
+    });
+    months.push({ m, byStage, byCat, boosts, total, cost, net: total - cost, demand, throttle, active: active.map(a => a.x.id) });
+  }
+  return { months, totals, sch };
+}
+function sumRange(months, a, b){ let s = 0; for (let i = a; i < Math.min(b, months.length); i++) s += months[i].total; return s; }
+
+/* ---------------- charts ---------------- */
+function niceTicks(max, n=4){
+  if (!(max > 0)) return [0, 1];
+  const raw = max / n; const mag = Math.pow(10, Math.floor(Math.log10(raw))); const norm = raw / mag;
+  const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
+  const ticks = []; for (let v = 0; v <= max + 1e-9; v += step) ticks.push(+v.toFixed(6)); if (ticks[ticks.length-1] < max) ticks.push(+(ticks[ticks.length-1] + step).toFixed(6)); return ticks;
+}
+function roundTop(x, y, w, h, r){ r = Math.min(r, w/2, h); if (h <= 0) return ''; return `M${x},${y+h}V${y+r}a${r},${r} 0 0 1 ${r},-${r}h${w-2*r}a${r},${r} 0 0 1 ${r},${r}V${y+h}Z`; }
+function roundBottom(x, y, w, h, r){ r = Math.min(r, w/2, h); if (h <= 0) return ''; return `M${x},${y}V${y+h-r}a${r},${r} 0 0 0 ${r},${r}h${w-2*r}a${r},${r} 0 0 0 ${r},-${r}V${y}Z`; }
+function makeTip(container){ let tip = container.querySelector('.tip'); if (!tip) { tip = document.createElement('div'); tip.className = 'tip'; container.appendChild(tip); } return tip; }
+function placeTip(tip, container, px){ const cw = container.clientWidth; const tw = tip.offsetWidth || 150; let left = px + 12; if (left + tw > cw) left = px - tw - 12; if (left < 0) left = 4; tip.style.left = left + 'px'; tip.style.top = '6px'; }
+function tipRows(title, rows){ // rows: [{name,color,value,kind:'line'|'rect'}]
+  const t = document.createElement('div'); t.className = 't'; t.textContent = title; const frag = document.createDocumentFragment(); frag.appendChild(t);
+  rows.forEach(r => { const d = document.createElement('div'); d.className = 'r'; const s = document.createElement('span'); const k = document.createElement('i'); k.className = r.kind === 'rect' ? 'sw' : 'swl'; k.style.background = r.color; s.appendChild(k); s.appendChild(document.createTextNode(r.name)); const b = document.createElement('b'); b.textContent = r.value; d.appendChild(s); d.appendChild(b); frag.appendChild(d); });
+  return frag;
+}
+function legend(container, items, onToggle){
+  const l = document.createElement('div'); l.className = 'legend';
+  items.forEach(it => { const b = document.createElement(onToggle ? 'button' : 'span'); b.className = 'k' + (it.off ? ' off' : ''); const k = document.createElement('i'); k.className = it.kind === 'rect' ? 'sw' : 'swl'; k.style.background = it.color; b.appendChild(k); b.appendChild(document.createTextNode(it.name)); if (onToggle) { b.type = 'button'; b.addEventListener('click', () => onToggle(it.id)); } l.appendChild(b); });
+  container.appendChild(l); return l;
+}
+/* Line chart: series = [{id,name,color,kind:'line'|'band'|'dots',values:[] | [[lo,hi],...]}] */
+function lineChart(container, cfg){
+  container.innerHTML = ''; container.classList.add('plot');
+  const W = Math.max(280, container.clientWidth || 340), H = cfg.height || 200;
+  const padL = 44, padR = 14, padT = 10, padB = 26; const iw = W - padL - padR, ih = H - padT - padB;
+  const n = cfg.x.length; const xs = i => padL + (n > 1 ? i * iw / (n - 1) : iw / 2);
+  let max = 0; cfg.series.forEach(s => s.values.forEach(v => { if (Array.isArray(v)) max = Math.max(max, v[1] || 0); else if (v != null) max = Math.max(max, v); }));
+  const ticks = niceTicks(max > 0 ? max : 100, 4); const top = ticks[ticks.length-1] || 1; const ys = v => padT + ih - (v / top) * ih;
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, width:W, height:H, role:'img', 'aria-label': cfg.aria || 'chart'});
+  const grid = el('g', {class:'grid'}); ticks.forEach(t => { grid.appendChild(el('line', {x1:padL, x2:W-padR, y1:ys(t), y2:ys(t)})); svg.appendChild(txt(padL-6, ys(t)+3.5, fmtAxis(t), {'text-anchor':'end'})); }); svg.appendChild(grid);
+  const every = n > 14 ? 3 : n > 8 ? 2 : 1; cfg.x.forEach((lab, i) => { if ((n - 1 - i) % every === 0) svg.appendChild(txt(xs(i), H-8, lab, {'text-anchor': i === n-1 ? 'end' : i === 0 ? 'start' : 'middle'})); });
+  cfg.series.filter(s => s.kind === 'band').forEach(s => { let d = ''; s.values.forEach((v, i) => { d += (i ? 'L' : 'M') + xs(i).toFixed(1) + ',' + ys(v ? v[1] : 0).toFixed(1); }); for (let i = n-1; i >= 0; i--) { const v = s.values[i]; d += 'L' + xs(i).toFixed(1) + ',' + ys(v ? v[0] : 0).toFixed(1); } svg.appendChild(el('path', {d: d + 'Z', fill: s.color, 'fill-opacity': .12})); });
+  cfg.series.filter(s => s.kind === 'line').forEach(s => { let d = ''; let started = false; s.values.forEach((v, i) => { if (v == null) { started = false; return; } d += (started ? 'L' : 'M') + xs(i).toFixed(1) + ',' + ys(v).toFixed(1); started = true; }); if (d) svg.appendChild(el('path', {d, fill:'none', stroke:s.color, 'stroke-width':2, 'stroke-linejoin':'round', 'stroke-linecap':'round'})); const last = s.values.map((v,i)=>[v,i]).filter(p=>p[0]!=null).pop(); if (last && s.endDot) svg.appendChild(el('circle', {cx: xs(last[1]), cy: ys(last[0]), r:4, fill:s.color, stroke:'var(--panel)', 'stroke-width':2})); });
+  cfg.series.filter(s => s.kind === 'dots').forEach(s => { s.values.forEach((v, i) => { if (v == null) return; svg.appendChild(el('circle', {cx: xs(i), cy: ys(v), r:4, fill:s.color, stroke:'var(--panel)', 'stroke-width':2})); }); let d = ''; let started = false; s.values.forEach((v, i) => { if (v == null) { started = false; return; } d += (started ? 'L' : 'M') + xs(i).toFixed(1) + ',' + ys(v).toFixed(1); started = true; }); if (d) svg.insertBefore(el('path', {d, fill:'none', stroke:s.color, 'stroke-width':2, 'stroke-linejoin':'round'}), svg.lastChild); });
+  svg.appendChild(el('line', {class:'axis', x1:padL, x2:W-padR, y1:padT+ih, y2:padT+ih, stroke:'var(--axis)'}));
+  const xh = el('line', {class:'xh', x1:0, x2:0, y1:padT, y2:padT+ih}); svg.appendChild(xh);
+  const hit = el('rect', {x:padL, y:0, width:iw, height:H, fill:'transparent'}); svg.appendChild(hit);
+  container.appendChild(svg);
+  const tip = makeTip(container);
+  const show = (clientX) => { const rect = svg.getBoundingClientRect(); const px = (clientX - rect.left) * (W / rect.width); let i = Math.round(((px - padL) / iw) * (n - 1)); i = clamp(i, 0, n-1); xh.setAttribute('x1', xs(i)); xh.setAttribute('x2', xs(i)); xh.style.opacity = 1;
+    const rows = cfg.series.map(s => { const v = s.values[i]; if (v == null) return null; return { name: s.name, color: s.color, kind: s.kind === 'band' ? 'rect' : 'line', value: Array.isArray(v) ? `${fmtMoney(v[0])} – ${fmtMoney(v[1])}` : fmtMoney(v) }; }).filter(Boolean);
+    if (cfg.extra) rows.push(...cfg.extra(i)); tip.innerHTML = ''; tip.appendChild(tipRows(cfg.xLong ? cfg.xLong[i] : cfg.x[i], rows)); tip.classList.add('on'); placeTip(tip, container, xs(i) * (rect.width / W)); };
+  const hide = () => { tip.classList.remove('on'); xh.style.opacity = 0; };
+  hit.addEventListener('pointermove', e => show(e.clientX)); hit.addEventListener('pointerdown', e => show(e.clientX)); hit.addEventListener('pointerleave', hide);
+  if (cfg.series.length > 1) legend(container, cfg.series.map(s => ({id:s.id, name:s.name, color:s.color, kind: s.kind === 'band' ? 'rect' : 'line'})));
+}
+/* Column chart: stacks = [{id,name,color,values:[]}] (single stack may be negative) */
+function columnChart(container, cfg){
+  container.innerHTML = ''; container.classList.add('plot');
+  const W = Math.max(280, container.clientWidth || 340), H = cfg.height || 200;
+  const padL = 44, padR = 10, padT = 10, padB = 26; const iw = W - padL - padR, ih = H - padT - padB;
+  const n = cfg.x.length; const slot = iw / n; const bw = Math.min(24, slot * 0.62); const gap = 2;
+  const vis = cfg.stacks.filter(s => !s.off);
+  let max = 0, min = 0; for (let i = 0; i < n; i++){ let pos = 0, neg = 0; vis.forEach(s => { const v = s.values[i] || 0; if (v >= 0) pos += v; else neg += v; }); max = Math.max(max, pos); min = Math.min(min, neg); }
+  const tp = max > 0 ? niceTicks(max, min < 0 ? 3 : 4) : (min < 0 ? [0] : niceTicks(100, 4)), tn = min < 0 ? niceTicks(-min, 2).map(v => -v).reverse() : [0];
+  const top = tp[tp.length-1] || 1, bot = tn[0] || 0; const span = top - bot || 1; const ys = v => padT + (top - v) / span * ih;
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, width:W, height:H, role:'img', 'aria-label': cfg.aria || 'chart'});
+  const grid = el('g', {class:'grid'}); const ticks = Array.from(new Set([...tn, ...tp])).sort((a,b)=>a-b); ticks.forEach(t => { if (t !== 0) grid.appendChild(el('line', {x1:padL, x2:W-padR, y1:ys(t), y2:ys(t)})); svg.appendChild(txt(padL-6, ys(t)+3.5, fmtAxis(t), {'text-anchor':'end'})); }); svg.appendChild(grid);
+  const every = n > 14 ? 3 : n > 8 ? 2 : 1; cfg.x.forEach((lab, i) => { if ((n - 1 - i) % every === 0) svg.appendChild(txt(padL + slot*i + slot/2, H-8, lab, {'text-anchor':'middle'})); });
+  const bars = el('g');
+  for (let i = 0; i < n; i++){ const x = padL + slot*i + (slot - bw)/2; let accP = 0, accN = 0; const segs = vis.map(s => ({s, v: s.values[i] || 0})).filter(o => o.v !== 0);
+    const lastPos = segs.filter(o => o.v > 0).pop(); const lastNeg = segs.filter(o => o.v < 0).pop();
+    segs.forEach(o => { if (o.v > 0){ const y0 = ys(accP), y1 = ys(accP + o.v); const h = Math.max(0, y0 - y1 - (accP > 0 ? gap : 0)); const y = y1; const d = o === lastPos ? roundTop(x, y, bw, h, 4) : (h > 0 ? `M${x},${y}h${bw}v${h}h${-bw}Z` : ''); if (d) bars.appendChild(el('path', {d, fill:o.s.color})); accP += o.v; }
+      else { const y0 = ys(accN), y1 = ys(accN + o.v); const h = Math.max(0, y1 - y0 - (accN < 0 ? gap : 0)); const y = y0 + (accN < 0 ? gap : 0); const d = o === lastNeg ? roundBottom(x, y, bw, h, 4) : (h > 0 ? `M${x},${y}h${bw}v${h}h${-bw}Z` : ''); if (d) bars.appendChild(el('path', {d, fill:o.s.color})); accN += o.v; } });
+  }
+  svg.appendChild(bars);
+  svg.appendChild(el('line', {class:'axis', x1:padL, x2:W-padR, y1:ys(0), y2:ys(0), stroke:'var(--axis)'}));
+  const hl = el('rect', {x:0, y:padT, width:slot, height:ih, fill:'#fff', 'fill-opacity':0}); svg.appendChild(hl);
+  const hit = el('rect', {x:padL, y:0, width:iw, height:H, fill:'transparent'}); svg.appendChild(hit);
+  container.appendChild(svg);
+  const tip = makeTip(container);
+  const show = clientX => { const rect = svg.getBoundingClientRect(); const px = (clientX - rect.left) * (W / rect.width); const i = clamp(Math.floor((px - padL) / slot), 0, n-1); hl.setAttribute('x', padL + slot*i); hl.setAttribute('fill-opacity', .05);
+    const rows = vis.map(s => ({name:s.name, color:s.color, kind:'rect', value: fmtMoney(s.values[i] || 0)})); if (cfg.extra) rows.push(...cfg.extra(i)); if (vis.length > 1) rows.push({name:'Total', color:'transparent', kind:'rect', value: fmtMoney(vis.reduce((a,s)=>a+(s.values[i]||0),0))});
+    tip.innerHTML = ''; tip.appendChild(tipRows(cfg.xLong ? cfg.xLong[i] : cfg.x[i], rows)); tip.classList.add('on'); placeTip(tip, container, (padL + slot*i + slot/2) * (rect.width / W)); };
+  const hide = () => { tip.classList.remove('on'); hl.setAttribute('fill-opacity', 0); };
+  hit.addEventListener('pointermove', e => show(e.clientX)); hit.addEventListener('pointerdown', e => show(e.clientX)); hit.addEventListener('pointerleave', hide);
+  if (cfg.stacks.length > 1) legend(container, cfg.stacks.map(s => ({id:s.id, name:s.name, color:s.color, kind:'rect', off:s.off})), cfg.onToggle);
+}
+function tableView(container, headers, rows){
+  container.innerHTML = ''; const wrap = document.createElement('div'); wrap.className = 'tv-wrap'; const t = document.createElement('table'); t.className = 'tv';
+  const thr = document.createElement('tr'); headers.forEach(h => { const th = document.createElement('th'); th.textContent = h; thr.appendChild(th); }); t.appendChild(thr);
+  rows.forEach(r => { const tr = document.createElement('tr'); r.forEach(c => { const td = document.createElement('td'); td.textContent = c; tr.appendChild(td); }); t.appendChild(tr); });
+  wrap.appendChild(t); container.appendChild(wrap);
+}
+function sparkline(values, color, w=84, h=24){
+  const max = Math.max(...values, 1e-9); const n = values.length; const xs = i => (n > 1 ? i * (w - 4) / (n - 1) : 0) + 2; const ys = v => h - 3 - (v / max) * (h - 6);
+  let d = ''; values.forEach((v, i) => d += (i ? 'L' : 'M') + xs(i).toFixed(1) + ',' + ys(v).toFixed(1));
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${d}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" opacity=".9"/><circle cx="${xs(n-1).toFixed(1)}" cy="${ys(values[n-1]).toFixed(1)}" r="2.5" fill="${color}"/></svg>`;
+}
+/* chart card with chart/table toggle */
+function chartCard(mount, {title, sub, render, table}){
+  const card = document.createElement('div'); card.className = 'card chart-card';
+  card.innerHTML = `<div class="chart-head"><h2>${esc(title)}${sub ? ` <span class="sub">${esc(sub)}</span>` : ''}</h2><div class="seg" role="tablist"><button type="button" class="on" data-m="chart">Chart</button><button type="button" data-m="table">Table</button></div></div><div class="body"></div>`;
+  const body = card.querySelector('.body'); let mode = 'chart';
+  const draw = () => { if (mode === 'chart') { body.classList.add('plot'); render(body); } else { body.classList.remove('plot'); body.innerHTML = ''; const t = table(); tableView(body, t.headers, t.rows); } };
+  card.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { mode = b.dataset.m; card.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b)); draw(); }));
+  mount.appendChild(card); draw(); return card;
+}
+
+/* ---------------- shared partials ---------------- */
+const statusPill = (id) => { const r = st(id); const earning = stageEarning(id); return `<span class="pill ${r.status}"><i class="d"></i>${STATUS[r.status]}</span>${earning ? '<span class="pill earning">$ earning</span>' : ''}`; };
+const catTag = (c) => `<span class="tag"><i class="sw" style="background:${catColor(c)}"></i>${esc(CATS[c] ? CATS[c].label : c)}</span>`;
+const stageChip = (id) => { const s = BY_ID[id]; if (!s) return ''; return `<button type="button" class="tag link" data-open-stage="${s.id}"><i class="sw" style="background:${catColor(s.cat)}"></i>${s.n} · ${esc(s.short)}</button>`; };
+const fedBy = (id) => STAGES.filter(f => (f.feeds || []).some(e => e.to === id));
+function nextActions(limit=3){
+  const out = []; const order = STAGES.filter(s => ['building','live'].includes(st(s.id).status));
+  const pool = order.length ? order : STAGES.slice(0, 2);
+  pool.forEach(s => { const r = st(s.id); const i = s.actions.findIndex((a, idx) => !r.checks[idx]); if (i >= 0 && out.length < limit) out.push({stage:s, idx:i, text:s.actions[i]}); });
+  return out;
+}
+
+/* ---------------- views ---------------- */
+function renderHome(){
+  const v = $('#view-home'); const sc = scenario(); const cm = curMonth(); const f = forecast(sc, cm + 24); const nm = nowMonth();
+  const proj12 = sumRange(f.months, cm, cm + 12); const tot = ledgerTotals(); const thisMonth = ledgerTotals(e => monthIdx(e.date, S.settings.startDate) === nm);
+  const live = STAGES.filter(s => st(s.id).status === 'live').length, building = STAGES.filter(s => st(s.id).status === 'building').length;
+  const cur = f.months[Math.min(cm, f.months.length-1)]; const demand = cur ? cur.demand : 0; const budget = S.settings.hoursPerWeek;
+  const acts = nextActions(3);
+  const tip = !S.settings.tipDismissed ? `<div class="notice info" id="tip" style="margin-bottom:12px"><div class="between"><b>Start here</b><button type="button" class="btn ghost sm" id="tip-x" aria-label="Dismiss">✕</button></div><div class="small soft" style="margin-top:4px">Set your weekly hours in Settings, then open <b>Stage 1</b> in the Cascade tab and mark it <b>Building</b>. Log every dollar in the Ledger; the Forecast re-plans around what actually happens.</div></div>` : '';
+  v.innerHTML = `
+    ${provNote()}
+    ${tip}
+    <div class="card hero">
+      <div class="label">Next 12 months, projected · ${esc(SCEN[sc].long)}</div>
+      <div class="value">${fmtMoney(proj12)}</div>
+      <div class="delta">${fmtMoney(f.months[Math.min(cm+11, f.months.length-1)].total)}/month by ${monLY(cm+11)} · ${fmtMoney(sumRange(f.months, cm, cm+24))} over 24 months</div>
+    </div>
+    <div class="tiles" style="margin-bottom:12px">
+      <div class="tile"><div class="label">Earned to date</div><div class="value">${fmtMoney(tot.inc)}</div><div class="delta">${fmtMoney(tot.net, {sign:true})} net after ${fmtMoney(tot.exp)} costs</div></div>
+      <div class="tile"><div class="label">This month</div><div class="value">${fmtMoney(thisMonth.inc)}</div><div class="delta">${monthLabel(S.settings.startDate, nm, true)}</div></div>
+      <div class="tile"><div class="label">Stages</div><div class="value">${live} live</div><div class="delta">${building} building · ${STAGES.length - live - building} waiting</div></div>
+      <div class="tile"><div class="label">Hours this month</div><div class="value">${demand}<span class="muted" style="font-size:14px;font-weight:600"> / ${budget} wk</span></div><div class="meter${demand > budget ? ' over' : ''}"><i style="width:${clamp(demand / budget * 100, 2, 100)}%"></i></div></div>
+    </div>
+    <div class="card">
+      <h2>Cascade status <span class="sub">tap a stage</span></h2>
+      <div class="grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+        ${STAGES.map(s => { const r = st(s.id); return `<button type="button" class="btn ghost" data-open-stage="${s.id}" style="flex-direction:column;gap:4px;padding:8px 4px;min-height:58px;border-color:${r.status === 'idle' ? 'var(--hair)' : catColor(s.cat)}"><b style="font-size:15px">${s.n}</b><span class="xs muted" style="font-weight:600">${STATUS[r.status]}</span></button>`; }).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <h2>Next moves</h2>
+      <div class="list">${acts.length ? acts.map(a => `<div class="item tap" data-open-stage="${a.stage.id}"><div class="num" style="background:${catColor(a.stage.cat)}">${a.stage.n}</div><div class="body"><div class="title">${esc(a.text)}</div><div class="sub">${esc(a.stage.name)}</div></div><span class="chev"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></div>`).join('') : '<div class="empty">Every first move is checked off. Open a stage to add notes or set the next one to Building.</div>'}</div>
+    </div>
+    <div class="card">
+      <h2>How the waterfall works</h2>
+      <ul class="b">${DATA.research.principles.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
+    </div>`;
+  const tx = $('#tip-x'); if (tx) tx.addEventListener('click', () => { S.settings.tipDismissed = true; save(); renderHome(); });
+}
+
+function renderFlow(){
+  const v = $('#view-flow'); const sc = scenario(); const f = forecast(sc, curMonth() + 24);
+  v.innerHTML = `<div class="card tight"><h2>Cascade map <span class="sub">arcs show what feeds what</span></h2><div id="map"></div><div class="legend">${Object.keys(CATS).map(c => `<span class="k"><i class="sw" style="background:${catColor(c)}"></i>${esc(CATS[c].label)}</span>`).join('')}</div></div>
+    <div id="stage-list"></div>`;
+  drawMap($('#map'));
+  const list = $('#stage-list'); const cm = curMonth();
+  list.innerHTML = STAGES.map((s, i) => { const r = st(s.id); const q = f.sch[s.id]; const m12 = f.months[cm + 11].byStage[s.id] || 0; const earned = ledgerTotals(e => e.stage === s.id).inc; const feeds = (s.feeds || []).map(e => e.to); const fb = fedBy(s.id).map(x => x.id);
+    return `${i ? '<div class="connector"></div>' : ''}<button type="button" class="stage" data-open-stage="${s.id}">
+      <div class="head"><div class="num" style="background:${catColor(s.cat)}">${s.n}</div><div style="flex:1;min-width:0"><div class="name">${esc(s.name)}</div><div class="tagline">${esc(s.tagline)}</div></div></div>
+      <div class="meta">${statusPill(s.id)}${catTag(s.cat)}<span class="tag">${q.killed ? 'Killed' : `Month ${q.start}${isFinite(q.end) ? '–' + q.end : '+'}`}</span></div>
+      <div class="nums"><div><b>${fmtMoney(earned)}</b><span>Earned</span></div><div><b>${fmtMoney(m12)}/mo</b><span>${monLY(cm+11)} · ${SCEN[sc].label}</span></div><div><b>${s.hours.run} h/wk</b><span>Running</span></div></div>
+      <div class="chips" style="margin-top:10px">${fb.length ? `<span class="xs muted" style="align-self:center">Fed by</span>${fb.map(id => `<span class="tag"><i class="sw" style="background:${catColor(BY_ID[id].cat)}"></i>${BY_ID[id].n}</span>`).join('')}` : ''}${feeds.length ? `<span class="xs muted" style="align-self:center;margin-left:${fb.length ? 6 : 0}px">Feeds</span>${feeds.map(id => `<span class="tag"><i class="sw" style="background:${catColor(BY_ID[id].cat)}"></i>${BY_ID[id].n}</span>`).join('')}` : ''}</div>
+    </button>`; }).join('');
+}
+let mapSel = null;
+function drawMap(mount){
+  const W = Math.max(280, mount.clientWidth || 340); const rowH = 50; const railX = Math.round(W * 0.42); const H = rowH * STAGES.length + 10;
+  const svg = el('svg', {class:'map', viewBox:`0 0 ${W} ${H}`, width:W, height:H, role:'img', 'aria-label':'Cascade map: stages and what feeds what'});
+  const ny = i => 25 + i * rowH;
+  const edges = []; STAGES.forEach((s, i) => (s.feeds || []).forEach(e => { const j = STAGES.findIndex(x => x.id === e.to); if (j >= 0) edges.push({i, j, color: catColor(s.cat), what: e.what}); }));
+  const maxR = Math.min(W - railX - 54, 130), maxL = railX - 84;
+  const eg = el('g');
+  edges.forEach(ed => { const y0 = ny(ed.i), y1 = ny(ed.j); const dist = Math.abs(ed.j - ed.i); const fwd = ed.j > ed.i; const bulge = Math.min(fwd ? maxR : maxL, 16 + dist * 12); const bx = fwd ? railX + bulge : railX - bulge;
+    const sel = mapSel != null && (ed.i === mapSel || ed.j === mapSel); const dim = mapSel != null && !sel;
+    eg.appendChild(el('path', {class:'edge', d:`M${railX},${y0} C${bx},${y0} ${bx},${y1} ${railX},${y1}`, stroke: ed.color, 'stroke-width': sel ? 3 : 1.6, opacity: dim ? .1 : sel ? 1 : .5})); });
+  svg.appendChild(eg);
+  STAGES.forEach((s, i) => { const r = st(s.id); const sel = mapSel === i; const dim = mapSel != null && !sel; const g = el('g', {class:'node', 'data-map-sel': i, tabindex:0, role:'button', 'aria-label': `Stage ${s.n}: ${s.name}`, opacity: dim ? .55 : 1});
+    g.appendChild(el('circle', {cx: railX, cy: ny(i), r: 23, fill:'transparent'}));
+    g.appendChild(el('circle', {cx: railX, cy: ny(i), r: sel ? 15 : 13, fill: r.status === 'idle' ? 'var(--panel3)' : catColor(s.cat), stroke: sel ? '#fff' : catColor(s.cat), 'stroke-width': 2}));
+    g.appendChild(txt(railX, ny(i) + 4.2, String(s.n), {'text-anchor':'middle', style:`font-size:11.5px;font-weight:800;fill:${r.status === 'idle' ? 'var(--ink2)' : '#fff'}`}));
+    g.appendChild(txt(railX - 26, ny(i) + 4, s.short, {class:'lbl', 'text-anchor':'end'}));
+    g.appendChild(txt(W - 4, ny(i) + 4, STATUS[r.status], {class:'cat', 'text-anchor':'end'}));
+    svg.appendChild(g); });
+  mount.innerHTML = ''; mount.appendChild(svg);
+  const cap = document.createElement('div'); cap.className = 'notice small'; cap.style.marginTop = '8px';
+  if (mapSel == null) { cap.textContent = 'Tap a stage to see what it feeds and what feeds it. Arcs to the right flow down the waterfall; arcs to the left flow back up.'; }
+  else { const s = STAGES[mapSel]; const feeds = (s.feeds || []).map(e => `${BY_ID[e.to].n} (${e.what})`); const fb = fedBy(s.id).map(f => { const e = f.feeds.find(x => x.to === s.id); return `${f.n} (${e.what})`; });
+    cap.innerHTML = `<div class="between"><b>${s.n} · ${esc(s.name)}</b><button type="button" class="btn sm primary" data-open-stage="${s.id}">Open</button></div><div class="soft" style="margin-top:4px">${feeds.length ? `<b>Feeds</b> → ${esc(feeds.join(', '))}` : '<b>Terminal stage</b>: it consumes, it does not feed'}${fb.length ? `<br><b>Fed by</b> ← ${esc(fb.join(', '))}` : ''}</div>`; }
+  mount.appendChild(cap);
+  $$('[data-map-sel]', svg).forEach(g => { const h = () => { const i = +g.getAttribute('data-map-sel'); mapSel = mapSel === i ? null : i; drawMap(mount); }; g.addEventListener('click', h); g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); h(); } }); });
+}
+
+let ledgerMonth = null;
+function renderLedger(){
+  const v = $('#view-ledger'); if (ledgerMonth == null) ledgerMonth = nowMonth(); const sd = S.settings.startDate;
+  const inMonth = e => monthIdx(e.date, sd) === ledgerMonth; const t = ledgerTotals(inMonth); const all = ledgerTotals();
+  const entries = S.ledger.filter(inMonth).sort((a, b) => b.date.localeCompare(a.date) || (b.ts||0) - (a.ts||0));
+  v.innerHTML = `
+    <div class="card tight"><div class="between"><button type="button" class="icon-btn" id="lm-prev" aria-label="Previous month"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="text-align:center"><div style="font-weight:700">${esc(monthLabel(sd, ledgerMonth, true))}</div><div class="xs muted">Month ${ledgerMonth} of the plan</div></div><button type="button" class="icon-btn" id="lm-next" aria-label="Next month"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div></div>
+    <div class="grid3" style="margin-bottom:12px">
+      <div class="tile"><div class="label">Income</div><div class="value" style="font-size:19px;color:var(--money)">${fmtMoney(t.inc)}</div></div>
+      <div class="tile"><div class="label">Costs</div><div class="value" style="font-size:19px">${fmtMoney(t.exp)}</div></div>
+      <div class="tile"><div class="label">Net</div><div class="value" style="font-size:19px">${fmtMoney(t.net)}</div><div class="delta">${fmtMoney(all.net, {sign:true})} all-time</div></div>
+    </div>
+    <div id="ledger-chart"></div>
+    <div class="card"><h2>Entries <span class="sub">${entries.length} this month</span></h2><div class="list" id="entries">${entries.length ? entries.map(e => { const s = BY_ID[e.stage]; return `<div class="item"><div class="num" style="background:${s ? catColor(s.cat) : 'var(--panel3)'}">${s ? s.n : '·'}</div><div class="body"><div class="title">${esc(e.note || (s ? s.short : 'General'))}</div><div class="sub">${esc(parseISO(e.date).toLocaleDateString('en-US', {month:'short', day:'numeric'}))}${s ? ' · ' + esc(s.short) : ''}</div></div><div class="amt ${income(e) ? 'in' : 'out'}">${income(e) ? '+' : '−'}${fmtMoney(+e.amount, {cents: (+e.amount % 1) !== 0})}</div><button type="button" class="icon-btn" data-del="${esc(e.id)}" aria-label="Delete entry" style="width:32px;height:32px;border-radius:9px"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div>`; }).join('') : '<div class="empty">Nothing logged this month. Tap + to add your first dollar (or cost).</div>'}</div></div>`;
+  $('#lm-prev').addEventListener('click', () => { ledgerMonth--; renderLedger(); }); $('#lm-next').addEventListener('click', () => { ledgerMonth++; renderLedger(); });
+  $$('#entries [data-del]').forEach(b => b.addEventListener('click', () => { const id = b.dataset.del; const e = S.ledger.find(x => x.id === id); if (!e) return; askConfirm(`Delete this ${fmtMoney(+e.amount, {cents:true})} ${income(e) ? 'income' : 'cost'} entry?`, 'Delete', () => { S.ledger = S.ledger.filter(x => x.id !== id); saveNow(); renderLedger(); toast('Entry deleted'); }); }));
+  // 12-month net chart ending at the selected month
+  const a = actualsByMonth(); const start = ledgerMonth - 11; const x = [], xl = [], net = [], inc = [], exp = [];
+  for (let m = start; m <= ledgerMonth; m++){ x.push(monthShort(sd, m)); xl.push(monthLabel(sd, m, true)); const r = a[m] || {inc:0, exp:0}; net.push(r.inc - r.exp); inc.push(r.inc); exp.push(r.exp); }
+  chartCard($('#ledger-chart'), { title:'Net by month', sub:'last 12 months',
+    render: body => columnChart(body, { x, xLong: xl, height: 180, aria:'Net income by month', stacks:[{id:'net', name:'Net', color:'var(--s1)', values: net}], extra: i => [{name:'Income', color:'var(--money)', kind:'rect', value: fmtMoney(inc[i])}, {name:'Costs', color:'var(--serious)', kind:'rect', value: fmtMoney(exp[i])}] }),
+    table: () => ({ headers:['Month','Income','Costs','Net'], rows: x.map((lab, i) => [xl[i], fmtMoney(inc[i]), fmtMoney(exp[i]), fmtMoney(net[i])]) }) });
+}
+
+const fcVis = {}; // category toggles for the stacked chart
+function renderForecast(){
+  const v = $('#view-forecast'); const sc = scenario(); const H = S.settings.horizon || 12; const sd = S.settings.startDate; const cm = curMonth();
+  const fAll = [0,1,2].map(i => forecast(i, Math.max(24, cm + H))); const f = fAll[sc];
+  const range = [cm, cm + H]; const total = sumRange(f.months, range[0], range[1]); const net = f.months.slice(range[0], range[1]).reduce((a, m) => a + m.net, 0);
+  const peak = f.months.slice(range[0], range[1]).reduce((a, m) => m.total > a.total ? m : a, f.months[range[0]]);
+  const over = f.months.slice(range[0], range[1]).filter(m => m.throttle < 1); const a = actualsByMonth();
+  let be = null; let cum = 0; for (let m = 0; m < f.months.length; m++){ cum += f.months[m].net; if (cum > 0 && be == null) be = m; }
+  v.innerHTML = `
+    ${provNote()}
+    <div class="card tight"><div class="between" style="gap:8px;flex-wrap:wrap"><div class="seg lg" id="sc-seg">${SCEN.map((s, i) => `<button type="button" class="${i === sc ? 'on' : ''}" data-sc="${i}">${s.label}</button>`).join('')}</div><div class="seg lg" id="hz-seg"><button type="button" class="${H === 12 ? 'on' : ''}" data-h="12">12 mo</button><button type="button" class="${H === 24 ? 'on' : ''}" data-h="24">24 mo</button></div></div></div>
+    <div class="card hero"><div class="label">Projected revenue · next ${H} months · ${esc(SCEN[sc].long)}</div><div class="value">${fmtMoney(total)}</div><div class="delta">${fmtMoney(net, {sign:true})} net after tool costs · ${S.settings.hoursPerWeek} h/week budget</div></div>
+    <div class="tiles" style="margin-bottom:12px">
+      <div class="tile"><div class="label">Run-rate in ${monLY(range[1]-1)}</div><div class="value">${fmtMoney(f.months[range[1]-1].total)}<span class="muted" style="font-size:13px;font-weight:600">/mo</span></div></div>
+      <div class="tile"><div class="label">Best month</div><div class="value">${fmtMoney(peak.total)}</div><div class="delta">${esc(monthLabel(sd, peak.m, true))}</div></div>
+      <div class="tile"><div class="label">Break-even</div><div class="value">${be == null ? '—' : 'Month ' + be}</div><div class="delta">${be == null ? 'not within 24 months' : esc(monthLabel(sd, be, true))}</div></div>
+      <div class="tile"><div class="label">Over-committed</div><div class="value">${over.length} mo</div><div class="delta">${over.length ? 'projections scaled to your hours' : 'hours fit your budget'}</div></div>
+    </div>
+    ${over.length ? `<div class="notice warn small" style="margin-bottom:12px"><b>Hours bottleneck.</b> In ${over.length} of the next ${H} months the plan needs more than ${S.settings.hoursPerWeek} h/week (peak ${Math.max(...over.map(m => m.demand))} h). Revenue in those months is scaled down to what your hours can actually produce. Fix: raise your hours in Settings, delay a stage's start, or sunset stage 1 earlier.</div>` : ''}
+    <div id="fc-line"></div>
+    <div id="fc-stack"></div>
+    <div class="card"><h2>By stage <span class="sub">${esc(SCEN[sc].label)} · ${monLY(range[0])}–${monLY(range[1]-1)}</span></h2><div class="tv-wrap"><table class="tv"><tr><th>Stage</th><th>Trend</th><th>${esc(monthShort(sd, range[1]-1))}</th><th>Total</th></tr>
+      ${STAGES.map(s => { const q = f.sch[s.id]; const vals = f.months.slice(range[0], range[1]).map(m => m.byStage[s.id] || 0); const tot = vals.reduce((x, y) => x + y, 0); return `<tr data-open-stage="${s.id}" style="cursor:pointer"><td><span class="row" style="gap:7px;white-space:nowrap"><i class="sw" style="background:${catColor(s.cat)}"></i>${s.n} · ${esc(s.short)}</span><div class="xs muted" style="padding-left:17px">${q.killed ? 'killed' : 'from M' + q.start}</div></td><td>${sparkline(vals, catColor(s.cat), 56, 22)}</td><td>${fmtMoney(vals[vals.length-1])}</td><td><b>${fmtMoney(tot)}</b></td></tr>`; }).join('')}
+      <tr><td><b>Cascade</b></td><td></td><td><b>${fmtMoney(f.months[range[1]-1].total)}</b></td><td><b>${fmtMoney(total)}</b></td></tr></table></div></div>
+    <div class="card"><details class="acc"><summary>Assumptions behind these numbers</summary><div class="acc-body"><ul class="b">
+      <li>Each stage ramps from zero through its research-backed month-3, month-6 and month-12 revenue (low / base / high), then drifts toward a month-24 plateau.</li>
+      <li><b>Feeding:</b> once an upstream stage has been producing for longer than its time-to-first-dollar, every arc into a downstream stage adds its boost (5–30%) to that stage's revenue, capped at +75% total. Audience and code assets keep feeding after a stage is sunset; cash does not.</li>
+      <li><b>Hours:</b> every active stage demands build, run or maintenance hours. When the total exceeds your weekly budget, that month's revenue is scaled by budget ÷ demand. The waterfall is sequential for a reason.</li>
+      <li><b>Scenarios:</b> Low = close to the measured medians for someone who sticks with it. Base = consistent weekly execution with Claude Code leverage; a base run-rate above $1,000/month would already put you in the top 14% of US side hustlers (Bankrate 2025). High = every stage at once hitting top-quartile results from the research, which very few people achieve. None of these are viral outliers.</li>
+      <li>Costs are tool subscriptions and setup fees only; taxes, your time and platform fees on gross revenue are not deducted.</li>
+      <li>Marking a stage Live uses its real start date; Paused stops future revenue; Killed removes it and its feeds.</li>
+    </ul></div></details></div>`;
+  $$('#sc-seg button').forEach(b => b.addEventListener('click', () => { S.settings.scenario = +b.dataset.sc; save(); syncScenario(); renderForecast(); }));
+  $$('#hz-seg button').forEach(b => b.addEventListener('click', () => { S.settings.horizon = +b.dataset.h; save(); renderForecast(); }));
+  const x = [], xl = []; for (let m = range[0]; m < range[1]; m++){ x.push(monthShort(sd, m)); xl.push(monthLabel(sd, m, true)); }
+  const slice = (fi, key) => fAll[fi].months.slice(range[0], range[1]).map(m => m[key]);
+  const base = slice(sc, 'total'), lo = slice(0, 'total'), hi = slice(2, 'total');
+  const actual = []; for (let m = range[0]; m < range[1]; m++) actual.push(m <= cm && a[m] ? a[m].inc : (m <= cm ? 0 : null));
+  const hasActual = actual.some(v => v);
+  chartCard($('#fc-line'), { title:'Monthly revenue', sub:`low–high band · ${SCEN[sc].label} line`,
+    render: body => lineChart(body, { x, xLong: xl, height: 200, aria:'Projected monthly revenue', series: [ {id:'band', name:'Low–high range', color:'var(--s1)', kind:'band', values: lo.map((l, i) => [l, hi[i]])}, {id:'base', name:`Projected (${SCEN[sc].label})`, color:'var(--s1)', kind:'line', endDot:true, values: base}, ...(hasActual ? [{id:'act', name:'Actual income', color:'var(--s2)', kind:'dots', values: actual}] : []) ], extra: i => { const m = f.months[range[0] + i]; return [{name:'Hours needed', color:'transparent', kind:'line', value:`${m.demand} h/wk${m.throttle < 1 ? ' · scaled ' + Math.round(m.throttle*100) + '%' : ''}`}]; } }),
+    table: () => ({ headers:['Month','Low','Projected','High','Actual','Hours'], rows: x.map((lab, i) => [xl[i], fmtMoney(lo[i]), fmtMoney(base[i]), fmtMoney(hi[i]), actual[i] == null ? '—' : fmtMoney(actual[i]), f.months[range[0]+i].demand + ' h']) }) });
+  const cats = Object.keys(CATS);
+  const drawStack = body => columnChart(body, { x, xLong: xl, height: 200, aria:'Projected revenue by category', stacks: cats.map(c => ({id:c, name:CATS[c].label, color:catColor(c), off: fcVis[c] === false, values: f.months.slice(range[0], range[1]).map(m => m.byCat[c] || 0)})), onToggle: id => { fcVis[id] = fcVis[id] === false ? true : false; drawStack(body); } });
+  chartCard($('#fc-stack'), { title:'Where it comes from', sub:'by category', render: drawStack,
+    table: () => ({ headers:['Month', ...cats.map(c => CATS[c].label), 'Total'], rows: x.map((lab, i) => { const m = f.months[range[0]+i]; return [xl[i], ...cats.map(c => fmtMoney(m.byCat[c] || 0)), fmtMoney(m.total)]; }) }) });
+}
+
+function renderResearch(){
+  const v = $('#view-research'); const R = DATA.research;
+  v.innerHTML = `
+    ${R.headline && R.headline.length ? `<div class="card"><h2>Base rates <span class="sub">what the data says</span></h2><div class="tiles">${R.headline.map(h => `<div class="tile"><div class="label">${esc(h.label)}</div><div class="value" style="font-size:19px">${esc(h.value)}</div><div class="delta">${esc(h.note || '')}</div></div>`).join('')}</div></div>` : ''}
+    <div class="card"><h2>Design principles</h2><ul class="b">${R.principles.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div>
+    <div class="card"><h2>Stage findings <span class="sub">tap to expand</span></h2>${STAGES.map(s => `<details class="acc"><summary><span class="num" style="width:26px;height:26px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#fff;background:${catColor(s.cat)}">${s.n}</span>${esc(s.name)}</summary><div class="acc-body">${s.findings && s.findings.length ? `<ul class="b">${s.findings.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : '<p class="small muted">Findings pending the research merge.</p>'}${s.sources && s.sources.length ? `<div style="margin-top:8px">${s.sources.map(src => `<div class="src"><a href="${esc(src.u)}" target="_blank" rel="noopener">${esc(src.t)}</a></div>`).join('')}</div>` : ''}<div style="margin-top:8px"><button type="button" class="btn sm" data-open-stage="${s.id}">Open stage ${s.n}</button></div></div></details>`).join('')}</div>
+    ${R.playbook && (R.playbook.weekly.length || R.playbook.sprints.length) ? `<div class="card"><h2>Operating playbook</h2>${R.playbook.weekly.length ? `<h3>Weekly cadence</h3><ul class="b">${R.playbook.weekly.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}${R.playbook.sprints.length ? `<h3 style="margin-top:12px">90-day sprints</h3>${R.playbook.sprints.map(sp => `<details class="acc"><summary>${esc(sp.name)}</summary><div class="acc-body"><ul class="b">${sp.goals.map(g => `<li>${esc(g)}</li>`).join('')}</ul></div></details>`).join('')}` : ''}${R.playbook.kill.length ? `<h3 style="margin-top:12px">Kill rules</h3><ul class="b">${R.playbook.kill.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}</div>` : ''}
+    ${R.reportMd ? `<div class="card"><details class="acc"><summary>Full research report</summary><div class="acc-body md">${md(R.reportMd)}</div></details></div>` : `<div class="notice small">The full research report will appear here once merged. Until then, see the reports folder in the project.</div>`}
+    <div class="xs muted" style="text-align:center;margin-top:8px">Data v${esc(DATA.meta.version)} · updated ${esc(DATA.meta.updated)}</div>`;
+}
+
+/* tiny markdown renderer (trusted, authored content) */
+function md(src){
+  const inline = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<i>$2</i>').replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  const lines = src.replace(/\r/g, '').split('\n'); let out = ''; let i = 0;
+  while (i < lines.length){ const L = lines[i];
+    if (/^\s*$/.test(L)) { i++; continue; }
+    let m;
+    if ((m = L.match(/^(#{1,4})\s+(.*)/))) { out += `<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`; i++; continue; }
+    if (/^\s*(-{3,}|\*{3,})\s*$/.test(L)) { out += '<hr>'; i++; continue; }
+    if (/^\|/.test(L)) { const rows = []; while (i < lines.length && /^\|/.test(lines[i])) { rows.push(lines[i]); i++; } const cells = r => r.replace(/^\||\|$/g, '').split('|').map(c => c.trim()); const body = rows.filter(r => !/^\|\s*:?-{2,}/.test(r)); out += '<table>' + body.map((r, ri) => '<tr>' + cells(r).map(c => `<${ri === 0 ? 'th' : 'td'}>${inline(c)}</${ri === 0 ? 'th' : 'td'}>`).join('') + '</tr>').join('') + '</table>'; continue; }
+    if (/^\s*[-*]\s+/.test(L)) { out += '<ul>'; while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) { out += `<li>${inline(lines[i].replace(/^\s*[-*]\s+/, ''))}</li>`; i++; } out += '</ul>'; continue; }
+    if (/^\s*\d+[.)]\s+/.test(L)) { out += '<ol>'; while (i < lines.length && /^\s*\d+[.)]\s+/.test(lines[i])) { out += `<li>${inline(lines[i].replace(/^\s*\d+[.)]\s+/, ''))}</li>`; i++; } out += '</ol>'; continue; }
+    if (/^>\s?/.test(L)) { let q = ''; while (i < lines.length && /^>\s?/.test(lines[i])) { q += lines[i].replace(/^>\s?/, '') + ' '; i++; } out += `<blockquote>${inline(q)}</blockquote>`; continue; }
+    let p = ''; while (i < lines.length && !/^\s*$/.test(lines[i]) && !/^(#{1,4}\s|\||\s*[-*]\s|\s*\d+[.)]\s|>)/.test(lines[i])) { p += lines[i] + ' '; i++; } out += `<p>${inline(p.trim())}</p>`;
+  }
+  return out;
+}
+
+/* ---------------- confirm dialog ---------------- */
+function askConfirm(message, yesLabel, onYes){
+  const old = $('.confirm'); if (old) old.remove();
+  const d = document.createElement('div'); d.className = 'confirm'; d.setAttribute('role', 'alertdialog'); d.setAttribute('aria-modal', 'true');
+  const box = document.createElement('div'); box.className = 'box';
+  const p = document.createElement('p'); p.textContent = message;
+  const acts = document.createElement('div'); acts.className = 'acts';
+  const no = document.createElement('button'); no.type = 'button'; no.className = 'btn'; no.textContent = 'Cancel';
+  const yes = document.createElement('button'); yes.type = 'button'; yes.className = 'btn danger'; yes.textContent = yesLabel;
+  no.addEventListener('click', () => d.remove());
+  yes.addEventListener('click', () => { d.remove(); onYes(); });
+  d.addEventListener('click', e => { if (e.target === d) d.remove(); });
+  acts.append(no, yes); box.append(p, acts); d.appendChild(box); document.body.appendChild(d); no.focus();
+}
+
+/* ---------------- sheets ---------------- */
+let sheetOpen = false, sheetPushed = false, sheetTitle = '', skipPop = false;
+function openSheet(title, bodyHTML, {sub='', onMount} = {}){
+  const wasOpen = sheetOpen, wasPushed = sheetPushed, sameSheet = wasOpen && title === sheetTitle;
+  const prevScroll = wasOpen && $('.sheet .sb') ? $('.sheet .sb').scrollTop : 0;
+  closeSheet(true); sheetPushed = wasPushed; sheetTitle = title;
+  const root = $('#sheet-root');
+  root.innerHTML = `<div class="backdrop" id="backdrop"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="grab"></div><div class="sh"><div class="ttl"><h2>${title}</h2>${sub ? `<div class="small muted" style="margin-top:3px">${sub}</div>` : ''}</div><button type="button" class="x" id="sheet-x" aria-label="Close">✕</button></div><div class="sb">${bodyHTML}</div></div>`;
+  if (wasOpen) { $('#backdrop').style.transition = 'none'; $('.sheet').style.transition = 'none'; }
+  void root.offsetHeight; $('#backdrop').classList.add('on'); $('.sheet').classList.add('on');
+  $('#backdrop').addEventListener('click', () => closeSheet()); $('#sheet-x').addEventListener('click', () => closeSheet());
+  sheetOpen = true; if (!sheetPushed) { try { history.pushState({sheet:1}, ''); sheetPushed = true; } catch(e){} }
+  if (onMount) onMount(root.querySelector('.sheet'));
+  if (sameSheet) root.querySelector('.sb').scrollTop = prevScroll;
+}
+function closeSheet(silent){
+  const root = $('#sheet-root'); if (!sheetOpen) { root.innerHTML = ''; return; }
+  sheetOpen = false; root.innerHTML = '';
+  if (sheetPushed && !silent) { sheetPushed = false; skipPop = true; setTimeout(() => { skipPop = false; }, 400); try { history.back(); } catch(e){ skipPop = false; } } else sheetPushed = false;
+  renderCurrent();
+}
+window.addEventListener('popstate', () => { if (skipPop) { skipPop = false; return; } if (sheetOpen) { sheetPushed = false; closeSheet(true); } else route(); });
+document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; const c = $('.confirm'); if (c) { c.remove(); return; } if (sheetOpen) closeSheet(); });
+
+function openStage(id){
+  const s = BY_ID[id]; if (!s) return; const r = st(id); const sc = scenario(); const cm = curMonth(); const f = forecast(sc, cm + 24); const q = f.sch[id]; const storedEnd = r.sunsetMonth != null ? r.sunsetMonth : s.plan.sunset;
+  const k = SCEN[sc].k === 'lo' ? 0 : SCEN[sc].k === 'hi' ? 2 : 1;
+  const earned = ledgerTotals(e => e.stage === id); const recent = S.ledger.filter(e => e.stage === id).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
+  const body = `
+    <div class="sec"><div class="chips">${catTag(s.cat)}${statusPill(id)}</div></div>
+    <div class="sec"><h4>Status</h4><div class="seg lg" id="st-seg" style="display:flex">${Object.keys(STATUS).map(k2 => `<button type="button" class="${r.status === k2 ? 'on' : ''}" data-st="${k2}" style="flex:1">${STATUS[k2]}</button>`).join('')}</div>${r.startedAt ? `<div class="xs muted" style="margin-top:6px">Started ${esc(parseISO(r.startedAt).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}))}</div>` : ''}</div>
+    <div class="sec"><p><b>${esc(s.tagline)}</b></p><p style="margin-top:6px">${esc(s.why)}</p></div>
+    <div class="sec"><h4>Numbers · ${esc(SCEN[sc].label)} case</h4><div class="kv">
+      <div><b>${fmtMoney(s.rev.m3[k])}</b><span>Month 3 /mo</span></div><div><b>${fmtMoney(s.rev.m6[k])}</b><span>Month 6 /mo</span></div><div><b>${fmtMoney(s.rev.m12[k])}</b><span>Month 12 /mo</span></div>
+      <div><b>${s.ttfd[0]}–${s.ttfd[1]} wk</b><span>First dollar</span></div><div><b>${fmtMoney(s.setup)} + ${fmtMoney(s.monthly)}/mo</b><span>Cost</span></div><div><b>${s.hours.build}→${s.hours.run}→${s.hours.maint}</b><span>h/wk build·run·keep</span></div>
+    </div><div class="xs muted" style="margin-top:6px">Low · base · high at month 12: ${fmtMoney(s.rev.m12[0])} · ${fmtMoney(s.rev.m12[1])} · ${fmtMoney(s.rev.m12[2])} per month. Cascade projection for this stage in ${monLY(cm+11)}: <b>${fmtMoney(f.months[cm+11].byStage[id] || 0)}</b>/mo (includes feeding boosts and your hours cap).</div></div>
+    <div class="sec"><h4>Schedule</h4><div class="row" style="flex-wrap:wrap;gap:10px">
+      <div><div class="xs muted" style="margin-bottom:4px">Planned start</div><div class="stepper"><button type="button" data-step="start" data-d="-1" aria-label="Earlier">−</button><b id="start-val">Month ${q.start}</b><button type="button" data-step="start" data-d="1" aria-label="Later">+</button></div></div>
+      <div><div class="xs muted" style="margin-bottom:4px">Sunset</div><div class="stepper"><button type="button" data-step="end" data-d="-1" aria-label="Earlier">−</button><b id="end-val">${storedEnd != null ? 'Month ' + storedEnd : 'Never'}</b><button type="button" data-step="end" data-d="1" aria-label="Later">+</button></div></div>
+    </div><div class="xs muted" style="margin-top:6px">Month 0 = ${esc(monthLabel(S.settings.startDate, 0, true))}. Marking the stage Live replaces the planned start with the real date.</div></div>
+    <div class="sec"><h4>Feeds</h4><div class="chips">${(s.feeds || []).length ? s.feeds.map(e => `<span class="row" style="gap:6px;width:100%;align-items:flex-start;padding:4px 0">${stageChip(e.to)}<span class="small soft" style="flex:1"><b>${esc(e.what)}</b> · ${esc(e.note || '')}</span></span>`).join('') : '<span class="small muted">Terminal stage: it consumes, it does not feed.</span>'}</div>
+      ${fedBy(id).length ? `<h4 style="margin-top:10px">Fed by</h4><div class="chips">${fedBy(id).map(fs => stageChip(fs.id)).join('')}</div>` : ''}</div>
+    <div class="sec"><h4>First moves</h4><div id="checks">${s.actions.map((a, i) => `<label class="check"><input type="checkbox" data-chk="${i}" ${r.checks[i] ? 'checked' : ''}><span>${esc(a)}</span></label>`).join('')}</div></div>
+    ${s.kpis && s.kpis.length ? `<div class="sec"><h4>Track</h4><div class="grid2">${s.kpis.map(kp => `<div class="field" style="margin:0"><label>${esc(kp.label)}${kp.unit ? ` (${esc(kp.unit)})` : ''}</label><input type="number" inputmode="decimal" data-kpi="${esc(kp.id)}" value="${esc(r.kpis[kp.id] ?? '')}" placeholder="0"></div>`).join('')}</div></div>` : ''}
+    <div class="sec"><h4>Revenue from this stage</h4><div class="between"><div><b style="font-size:20px">${fmtMoney(earned.inc)}</b><span class="small muted"> earned · ${fmtMoney(earned.exp)} costs</span></div><button type="button" class="btn money sm" id="add-for-stage">+ Log</button></div>${recent.length ? `<div class="list" style="margin-top:6px">${recent.map(e => `<div class="item" style="padding:8px 0;min-height:0"><div class="body"><div class="title" style="font-size:13.5px">${esc(e.note || (income(e) ? 'Income' : 'Cost'))}</div><div class="sub">${esc(e.date)}</div></div><div class="amt ${income(e) ? 'in' : 'out'}" style="font-size:13.5px">${income(e) ? '+' : '−'}${fmtMoney(+e.amount, {cents: (+e.amount % 1) !== 0})}</div></div>`).join('')}</div>` : ''}</div>
+    <div class="sec"><h4>Kill rule</h4><div class="notice small">${esc(s.kill)}</div></div>
+    ${s.tools && s.tools.length ? `<div class="sec"><h4>Tools</h4><div class="chips">${s.tools.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div></div>` : ''}
+    ${s.findings && s.findings.length ? `<div class="sec"><h4>What the research found</h4><ul class="b">${s.findings.map(fd => `<li>${esc(fd)}</li>`).join('')}</ul></div>` : ''}
+    <div class="sec"><h4>Notes</h4><div class="field"><textarea id="stage-notes" placeholder="Clients, ideas, what worked…">${esc(r.notes || '')}</textarea></div></div>
+    ${s.sources && s.sources.length ? `<div class="sec"><h4>Sources</h4>${s.sources.map(src => `<div class="src"><a href="${esc(src.u)}" target="_blank" rel="noopener">${esc(src.t)}</a></div>`).join('')}</div>` : ''}`;
+  openSheet(`<span class="row"><span class="num" style="width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:#fff;background:${catColor(s.cat)}">${s.n}</span>${esc(s.name)}</span>`, body, { sub: `Stage ${s.n} of ${STAGES.length}`, onMount: sheet => {
+    $$('#st-seg button', sheet).forEach(b => b.addEventListener('click', () => { const ns = b.dataset.st; const r2 = st(id); if (ns === 'live' || ns === 'building') { if (!r2.startedAt) r2.startedAt = todayISO(); } if (ns === 'idle') r2.startedAt = null; r2.status = ns; saveNow(); toast(`Stage ${s.n}: ${STATUS[ns]}`); openStage(id); }));
+    $$('[data-step]', sheet).forEach(b => b.addEventListener('click', () => { const r2 = st(id); const d = +b.dataset.d; const q2 = schedule(s); if (b.dataset.step === 'start') { const ns = clamp(q2.start + d, 0, 23); r2.startMonth = ns; if (r2.startedAt) { const dt = monthDate(S.settings.startDate, ns); r2.startedAt = `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-01`; } } else { const stored = r2.sunsetMonth != null ? r2.sunsetMonth : (s.plan.sunset == null ? 25 : s.plan.sunset); const nv = stored + d; r2.sunsetMonth = nv >= 25 ? null : clamp(nv, 1, 24); } saveNow(); openStage(id); }));
+    $$('#checks input', sheet).forEach(c => c.addEventListener('change', () => { const r2 = st(id); r2.checks[c.dataset.chk] = c.checked; save(); }));
+    $$('[data-kpi]', sheet).forEach(inp => inp.addEventListener('input', () => { const r2 = st(id); r2.kpis[inp.dataset.kpi] = inp.value === '' ? '' : +inp.value; save(); }));
+    const notes = $('#stage-notes', sheet); notes.addEventListener('input', () => { st(id).notes = notes.value; save(); });
+    $('#add-for-stage', sheet).addEventListener('click', () => openEntry({stage:id}));
+  }});
+}
+
+function openEntry(preset={}){
+  const body = `
+    <div class="seg lg" id="type-seg" style="display:flex;margin-bottom:14px"><button type="button" class="${preset.type !== 'expense' ? 'on' : ''}" data-t="income" style="flex:1">Income</button><button type="button" class="${preset.type === 'expense' ? 'on' : ''}" data-t="expense" style="flex:1">Cost</button></div>
+    <div class="field"><label>Amount ($)</label><input id="e-amt" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00"></div>
+    <div class="field"><label>Stage</label><select id="e-stage"><option value="">General / unassigned</option>${STAGES.map(s => `<option value="${s.id}" ${preset.stage === s.id ? 'selected' : ''}>${s.n} · ${esc(s.name)}</option>`).join('')}</select></div>
+    <div class="field"><label>Date</label><input id="e-date" type="date" value="${todayISO()}"></div>
+    <div class="field"><label>Note</label><input id="e-note" type="text" placeholder="Client, product, platform…" maxlength="80"></div>
+    <button type="button" class="btn money block" id="e-save">Save entry</button>`;
+  openSheet('Log an entry', body, { onMount: sheet => {
+    let type = preset.type === 'expense' ? 'expense' : 'income';
+    $$('#type-seg button', sheet).forEach(b => b.addEventListener('click', () => { type = b.dataset.t; $$('#type-seg button', sheet).forEach(x => x.classList.toggle('on', x === b)); }));
+    $('#e-save', sheet).addEventListener('click', () => { const amt = parseFloat($('#e-amt', sheet).value); if (!(amt > 0)) { toast('Enter an amount'); $('#e-amt', sheet).focus(); return; } const date = $('#e-date', sheet).value || todayISO(); S.ledger.push({ id: uid(), ts: Date.now(), type, amount: Math.round(amt * 100) / 100, stage: $('#e-stage', sheet).value || null, date, note: $('#e-note', sheet).value.trim() }); saveNow(); ledgerMonth = monthIdx(date, S.settings.startDate); toast(`${type === 'income' ? 'Income' : 'Cost'} logged: ${fmtMoney(amt, {cents:true})}`); closeSheet(); });
+    setTimeout(() => $('#e-amt', sheet).focus(), 250);
+  }});
+}
+
+function openSettings(){
+  const s = S.settings; const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone; const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  const body = `
+    <div class="sec"><h4>Your time</h4><div class="row" style="justify-content:space-between"><div><b>Hours per week</b><div class="xs muted">The forecast throttles stages to this.</div></div><div class="stepper"><button type="button" id="h-dn" aria-label="Fewer">−</button><b id="h-val">${s.hoursPerWeek} h</b><button type="button" id="h-up" aria-label="More">+</button></div></div></div>
+    <div class="sec"><h4>Plan</h4><div class="field"><label>Month 0 of the plan</label><input type="month" id="s-start" value="${s.startDate.slice(0,7)}"><div class="hint">Stage schedules and the forecast count months from here.</div></div>
+      <div class="field"><label>Default scenario</label><div class="seg lg" id="s-sc" style="display:flex">${SCEN.map((x, i) => `<button type="button" class="${i === scenario() ? 'on' : ''}" data-sc="${i}" style="flex:1">${x.long}</button>`).join('')}</div></div></div>
+    <div class="sec"><h4>Data</h4><div class="grid2"><button type="button" class="btn" id="copy-bk">Copy backup</button><button type="button" class="btn" id="exp">Save backup file</button><button type="button" class="btn" id="imp">Import file</button><button type="button" class="btn" id="paste-bk">Restore pasted</button></div><input type="file" id="imp-file" accept="application/json" class="sr"><div class="field" style="margin:10px 0 0"><label for="bk-box">Backup text</label><textarea id="bk-box" placeholder="Paste a backup here, then tap Restore pasted"></textarea></div><div class="hint xs muted" style="margin-top:6px">Everything lives in this browser. Copy a backup before switching devices.</div><button type="button" class="btn danger block" id="reset" style="margin-top:10px">Reset all progress</button></div>
+    <div class="sec"><h4>Install on your phone</h4>${standalone ? '<div class="notice money small">Installed. Opens full-screen and works offline.</div>' : ios ? '<div class="notice small">In Safari: tap <b>Share</b> → <b>Add to Home Screen</b>. It opens full-screen and works offline.</div>' : `<div class="notice small" id="install-note">${deferredInstall ? '<button type="button" class="btn primary block" id="install-btn">Install app</button>' : 'In Chrome: menu → <b>Add to Home screen</b> (or “Install app”).'}</div>`}</div>
+    <div class="xs muted" style="text-align:center">Cascade · data v${esc(DATA.meta.version)} · ${S.ledger.length} ledger entries</div>`;
+  openSheet('Settings', body, { onMount: sheet => {
+    const upd = () => { $('#h-val', sheet).textContent = S.settings.hoursPerWeek + ' h'; save(); syncScenario(); };
+    $('#h-dn', sheet).addEventListener('click', () => { S.settings.hoursPerWeek = clamp(S.settings.hoursPerWeek - 1, 2, 60); upd(); });
+    $('#h-up', sheet).addEventListener('click', () => { S.settings.hoursPerWeek = clamp(S.settings.hoursPerWeek + 1, 2, 60); upd(); });
+    $('#s-start', sheet).addEventListener('change', e => { if (/^\d{4}-\d{2}$/.test(e.target.value)) { S.settings.startDate = e.target.value + '-01'; ledgerMonth = null; save(); toast('Plan start updated'); } });
+    $$('#s-sc button', sheet).forEach(b => b.addEventListener('click', () => { S.settings.scenario = +b.dataset.sc; save(); syncScenario(); $$('#s-sc button', sheet).forEach(x => x.classList.toggle('on', x === b)); }));
+    const restore = text => { let obj; try { obj = JSON.parse(text); } catch(err){ toast('That is not a Cascade backup'); return; } if (!obj || !obj.settings || !Array.isArray(obj.ledger)) { toast('That is not a Cascade backup'); return; } askConfirm(`Replace everything here with this backup (${obj.ledger.length} ledger entries)?`, 'Replace', () => { S = obj; normalize(); saveNow(); ledgerMonth = null; syncScenario(); toast('Backup restored'); closeSheet(); }); };
+    $('#exp', sheet).addEventListener('click', () => { const blob = new Blob([JSON.stringify(S, null, 2)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `cascade-backup-${todayISO()}.json`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); });
+    $('#copy-bk', sheet).addEventListener('click', async () => { const json = JSON.stringify(S); const box = $('#bk-box', sheet); try { await navigator.clipboard.writeText(json); toast('Backup copied'); } catch(err){ box.value = json; box.focus(); box.select(); toast('Select the text and copy it'); } });
+    $('#paste-bk', sheet).addEventListener('click', () => restore($('#bk-box', sheet).value));
+    $('#imp', sheet).addEventListener('click', () => $('#imp-file', sheet).click());
+    $('#imp-file', sheet).addEventListener('change', e => { const file = e.target.files[0]; if (!file) return; const rd = new FileReader(); rd.onload = () => restore(rd.result); rd.readAsText(file); });
+    $('#reset', sheet).addEventListener('click', () => askConfirm('Erase all statuses, notes and ledger entries in this browser? This cannot be undone.', 'Erase all', () => { try { localStorage.removeItem(KEY); } catch(err){} S = DEFAULT(); ledgerMonth = null; syncScenario(); toast('Reset'); closeSheet(); }));
+    const ib = $('#install-btn', sheet); if (ib) ib.addEventListener('click', async () => { if (!deferredInstall) return; deferredInstall.prompt(); const r = await deferredInstall.userChoice; if (r.outcome === 'accepted') toast('Installing…'); deferredInstall = null; });
+  }});
+}
+
+/* ---------------- routing & boot ---------------- */
+const VIEWS = { home: renderHome, flow: renderFlow, ledger: renderLedger, forecast: renderForecast, research: renderResearch };
+let current = 'home';
+function go(view, push=true){ if (!VIEWS[view]) view = 'home'; current = view; $$('.view').forEach(x => x.classList.toggle('active', x.id === 'view-' + view)); $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === view)); $('#fab').classList.toggle('show', view === 'ledger'); VIEWS[view](); window.scrollTo({top:0}); if (push && location.hash !== '#' + view) { try { history.replaceState(null, '', '#' + view); } catch(e){} } }
+function renderCurrent(){ VIEWS[current](); }
+function route(){ const h = (location.hash || '#home').slice(1); const [view, arg] = h.split('/'); if (arg) { try { history.replaceState(null, '', '#' + (view === 'stage' ? 'flow' : view)); } catch(e){} } if (view === 'stage' && arg) { go('flow', false); openStage(arg); return; } go(VIEWS[view] ? view : 'home', false); if (view === 'ledger' && arg === 'add') openEntry(); }
+function syncScenario(){ $('#scenario-label').textContent = SCEN[scenario()].label; $('#top-sub').textContent = `${SCEN[scenario()].long} · ${S.settings.hoursPerWeek} h/wk`; }
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2200); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-open-stage]'); if (b) { e.preventDefault(); openStage(b.dataset.openStage); } });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('[data-open-stage]')) openStage(e.target.dataset.openStage); });
+$$('.tab').forEach(t => t.addEventListener('click', () => go(t.dataset.view)));
+$('#fab').addEventListener('click', () => openEntry());
+$('#settings-btn').addEventListener('click', openSettings);
+$('#scenario-chip').addEventListener('click', () => { S.settings.scenario = (scenario() + 1) % 3; save(); syncScenario(); toast(`${SCEN[scenario()].long} scenario`); renderCurrent(); });
+let lastW = window.innerWidth; window.addEventListener('resize', debounce(() => { if (window.innerWidth !== lastW && !sheetOpen) { lastW = window.innerWidth; renderCurrent(); } }, 200));
+let deferredInstall = null; window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; });
+try { if ('serviceWorker' in navigator && location.protocol !== 'file:') { window.addEventListener('load', () => { try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch(e){} }); } } catch(e){}
+load(); syncScenario(); route();
+window.CASCADE = { state: () => S, forecast, DATA };
+})();
+</script>
+</body>
+</html>
